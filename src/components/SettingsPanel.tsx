@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { LANGUAGE_LABELS, LANGUAGES } from '../i18n';
 import { useSettings } from '../store/settings';
 import type { HarakatMode, KeyboardMode, SmallLettersMode, Theme } from '../types';
 
@@ -113,6 +114,23 @@ export default function SettingsPanel({ open, onClose, onShowWelcome }: Props) {
               </span>
             </label>
           ))}
+        </fieldset>
+
+        <fieldset>
+          <legend>{t('settings.language.label')}</legend>
+          <div className="theme-row">
+            {LANGUAGES.map((l) => (
+              <label key={l} className={`theme-choice${s.language === l ? ' on' : ''}`}>
+                <input
+                  type="radio"
+                  name="language"
+                  checked={s.language === l}
+                  onChange={() => s.setLanguage(l)}
+                />
+                {LANGUAGE_LABELS[l]}
+              </label>
+            ))}
+          </div>
         </fieldset>
 
         <fieldset>

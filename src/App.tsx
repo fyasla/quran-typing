@@ -7,6 +7,7 @@ import TopBar from './components/TopBar';
 import TypingArea from './components/TypingArea';
 import WelcomeModal from './components/WelcomeModal';
 import { loadChapters, loadPage } from './data/loader';
+import { applyLanguage } from './i18n';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { duePages, toDay, type ReviewCard } from './review/srs';
 import { useProgress } from './store/progress';
@@ -17,8 +18,21 @@ import type { Chapter, PageData } from './types';
 
 export default function App() {
   const { t } = useTranslation();
-  const { page, setPage, harakatMode, smallLetters, blindMode, keyboardMode, theme } =
-    useSettings();
+  const {
+    page,
+    setPage,
+    harakatMode,
+    smallLetters,
+    blindMode,
+    keyboardMode,
+    theme,
+    language,
+  } = useSettings();
+
+  // Langue de l'interface (direction RTL pour l'arabe)
+  useEffect(() => {
+    applyLanguage(language);
+  }, [language]);
 
   // Application du thème (auto = préférence système, suivie en direct)
   useEffect(() => {
