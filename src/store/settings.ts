@@ -1,17 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { HarakatMode, KeyboardMode, SmallLettersMode } from '../types';
+import type { HarakatMode, KeyboardMode, SmallLettersMode, Theme } from '../types';
 
 interface SettingsState {
   harakatMode: HarakatMode;
   smallLetters: SmallLettersMode;
   blindMode: boolean;
   keyboardMode: KeyboardMode;
+  theme: Theme;
   page: number;
   setHarakatMode: (m: HarakatMode) => void;
   setSmallLetters: (m: SmallLettersMode) => void;
   setBlindMode: (b: boolean) => void;
   setKeyboardMode: (m: KeyboardMode) => void;
+  setTheme: (t: Theme) => void;
   setPage: (p: number) => void;
 }
 
@@ -24,11 +26,13 @@ export const useSettings = create<SettingsState>()(
       smallLetters: 'flexible',
       blindMode: false,
       keyboardMode: 'system',
+      theme: 'auto',
       page: 1,
       setHarakatMode: (harakatMode) => set({ harakatMode }),
       setSmallLetters: (smallLetters) => set({ smallLetters }),
       setBlindMode: (blindMode) => set({ blindMode }),
       setKeyboardMode: (keyboardMode) => set({ keyboardMode }),
+      setTheme: (theme) => set({ theme }),
       setPage: (page) =>
         set({ page: Math.min(TOTAL_PAGES, Math.max(1, Math.round(page))) }),
     }),

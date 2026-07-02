@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../store/settings';
-import type { HarakatMode, KeyboardMode, SmallLettersMode } from '../types';
+import type { HarakatMode, KeyboardMode, SmallLettersMode, Theme } from '../types';
 
 interface Props {
   open: boolean;
@@ -113,6 +113,23 @@ export default function SettingsPanel({ open, onClose, onShowWelcome }: Props) {
               </span>
             </label>
           ))}
+        </fieldset>
+
+        <fieldset>
+          <legend>{t('settings.theme.label')}</legend>
+          <div className="theme-row">
+            {(['auto', 'light', 'dark'] as Theme[]).map((v) => (
+              <label key={v} className={`theme-choice${s.theme === v ? ' on' : ''}`}>
+                <input
+                  type="radio"
+                  name="theme"
+                  checked={s.theme === v}
+                  onChange={() => s.setTheme(v)}
+                />
+                {t(`settings.theme.${v}`)}
+              </label>
+            ))}
+          </div>
         </fieldset>
 
         <fieldset>

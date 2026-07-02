@@ -17,8 +17,21 @@ import type { Chapter, PageData } from './types';
 
 export default function App() {
   const { t } = useTranslation();
-  const { page, setPage, harakatMode, smallLetters, blindMode, keyboardMode } =
+  const { page, setPage, harakatMode, smallLetters, blindMode, keyboardMode, theme } =
     useSettings();
+
+  // Application du thème (auto = préférence système, suivie en direct)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = () => {
+      const dark = theme === 'dark' || (theme === 'auto' && mq.matches);
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    };
+    apply();
+    if (theme !== 'auto') return;
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, [theme]);
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);

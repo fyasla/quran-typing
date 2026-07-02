@@ -42,3 +42,4 @@ export interface Chapter {
 export type HarakatMode = 'none' | 'important' | 'all';
 export type SmallLettersMode = 'strict' | 'flexible';
 export type KeyboardMode = 'system' | 'custom';
+export type Theme = 'auto' | 'light' | 'dark';

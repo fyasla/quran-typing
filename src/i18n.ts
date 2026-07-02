@@ -39,6 +39,12 @@ const resources = {
           label: 'Mode aveugle',
           desc: 'Le texte grisé est masqué : le texte n’apparaît qu’au fur et à mesure de la frappe.',
         },
+        theme: {
+          label: 'Thème',
+          auto: 'Automatique',
+          light: 'Clair',
+          dark: 'Sombre',
+        },
         keyboard: {
           label: 'Clavier',
           system: 'Clavier système',
