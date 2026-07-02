@@ -5,11 +5,13 @@ import ReviewPanel from './components/ReviewPanel';
 import SettingsPanel from './components/SettingsPanel';
 import TopBar from './components/TopBar';
 import TypingArea from './components/TypingArea';
+import WelcomeModal from './components/WelcomeModal';
 import { loadChapters, loadPage } from './data/loader';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { duePages, toDay, type ReviewCard } from './review/srs';
 import { useProgress } from './store/progress';
 import { useActiveProfile } from './store/profiles';
+import { clearResume, loadResume, saveResume } from './store/resume';
 import { TOTAL_PAGES, useSettings } from './store/settings';
 import type { Chapter, PageData } from './types';
 
@@ -23,6 +25,9 @@ export default function App() {
   const [loadError, setLoadError] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(
+    () => !localStorage.getItem('quran-typing-welcomed')
+  );
 
   const activeProfile = useActiveProfile();
   const { data: progress, recordSession, reload } = useProgress(activeProfile?.id ?? null);
@@ -58,10 +63,33 @@ export default function App() {
     [harakatMode, smallLetters]
   );
 
-  const { tokens, snapshot, handleText, restart, errorFlash } = useTypingEngine(
+  const profileId = activeProfile?.id ?? null;
+
+  // Reprise mi-page : état sauvegardé si même page et même mode harakats
+  // (relu uniquement quand page/profil changent, moment où le moteur est recréé)
+  const initialState = useMemo(() => {
+    const rec = loadResume(profileId);
+    return rec && rec.page === page && rec.harakatMode === harakatMode ? rec.state : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId, page]);
+
+  const { tokens, snapshot, handleText, restart, errorFlash, getState } = useTypingEngine(
     pageData,
-    engineSettings
+    engineSettings,
+    initialState
   );
+
+  // Sauvegarde de la progression en cours (et nettoyage à la complétion)
+  useEffect(() => {
+    if (!snapshot || tokens.length === 0) return;
+    if (snapshot.done) {
+      clearResume(profileId);
+      return;
+    }
+    if (snapshot.correctCount === 0) return;
+    const state = getState();
+    if (state) saveResume(profileId, { page, harakatMode, state });
+  }, [snapshot, tokens, profileId, page, harakatMode, getState]);
 
   // Nouvelle page = nouvelle session de frappe
   useEffect(() => {
@@ -83,8 +111,9 @@ export default function App() {
     startRef.current = null;
     recordedRef.current = false;
     setScheduledCard(null);
+    clearResume(profileId);
     restart();
-  }, [restart]);
+  }, [restart, profileId]);
 
   const accuracy =
     snapshot && snapshot.correctCount + snapshot.errorCount > 0
@@ -188,7 +217,21 @@ export default function App() {
         )}
       </main>
 
-      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onShowWelcome={() => {
+          setSettingsOpen(false);
+          setWelcomeOpen(true);
+        }}
+      />
+      <WelcomeModal
+        open={welcomeOpen}
+        onClose={() => {
+          localStorage.setItem('quran-typing-welcomed', '1');
+          setWelcomeOpen(false);
+        }}
+      />
       <ReviewPanel
         open={reviewOpen}
         onClose={() => setReviewOpen(false)}

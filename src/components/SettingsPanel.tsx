@@ -5,9 +5,11 @@ import type { HarakatMode, KeyboardMode, SmallLettersMode } from '../types';
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Ouvre l'onboarding depuis les réglages */
+  onShowWelcome: () => void;
 }
 
-export default function SettingsPanel({ open, onClose }: Props) {
+export default function SettingsPanel({ open, onClose, onShowWelcome }: Props) {
   const { t } = useTranslation();
   const s = useSettings();
 
@@ -126,6 +128,10 @@ export default function SettingsPanel({ open, onClose }: Props) {
             </span>
           </label>
         </fieldset>
+
+        <button type="button" className="link-btn" onClick={onShowWelcome}>
+          {t('welcome.help')}
+        </button>
       </div>
     </div>
   );

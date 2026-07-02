@@ -838,3 +838,101 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ===== Onboarding ===== */
+.welcome-modal {
+  max-width: 460px;
+  text-align: center;
+}
+
+.welcome-modal h2 {
+  margin: 0.4rem 0 0.8rem;
+  color: var(--accent);
+}
+
+.welcome-modal p {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #444;
+  text-align: start;
+}
+
+.welcome-icon {
+  font-family: 'qpc-hafs', serif;
+  font-size: 3rem;
+  line-height: 1.4;
+  color: var(--accent);
+}
+
+.welcome-modal .radio-row {
+  text-align: start;
+}
+
+.welcome-help {
+  text-align: start;
+  font-size: 0.85rem;
+  margin-top: 0.8rem;
+  color: #555;
+}
+
+.welcome-help summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.welcome-help ul {
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.2rem;
+}
+
+.welcome-help li {
+  margin-bottom: 0.3rem;
+}
+
+.welcome-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.2rem;
+}
+
+.welcome-nav button {
+  font-size: 0.9rem;
+  padding: 0.45rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #f6f6f6;
+  cursor: pointer;
+}
+
+.welcome-nav button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.welcome-dots {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.welcome-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d5cdb9;
+}
+
+.welcome-dots i.on {
+  background: var(--accent);
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.4rem 0;
+  text-decoration: underline;
+}

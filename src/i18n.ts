@@ -47,6 +47,25 @@ const resources = {
           customDesc: 'L’application convertit les touches physiques selon la disposition arabe standard, quel que soit votre clavier. Touches en plus : - = \\ pour les petites lettres.',
         },
       },
+      welcome: {
+        title: 'Bienvenue',
+        intro1:
+          'Quran Typing vous aide à mémoriser le saint Coran en le tapant au clavier, page par page, sur le mushaf de Madinah.',
+        intro2:
+          'Le texte se colore au fil de la frappe : vert = correct, rouge = erreur. Chaque page terminée est planifiée en révision espacée pour ancrer la mémorisation.',
+        kbTitle: 'Votre clavier',
+        kbIntro: 'Comment voulez-vous taper l’arabe ?',
+        kbHelpTitle: 'Activer un clavier arabe sur votre appareil',
+        kbHelpWindows: 'Windows : Paramètres → Heure et langue → Langue et région → Ajouter une langue → Arabe.',
+        kbHelpMac: 'macOS : Réglages système → Clavier → Sources de saisie → + → Arabe.',
+        kbHelpMobile: 'Android / iPhone : réglages du clavier → Langues → Ajouter l’arabe.',
+        harakatTitle: 'Niveau de difficulté',
+        harakatIntro: 'Faut-il taper les voyelles (harakats) ? Vous pourrez changer à tout moment dans les réglages.',
+        next: 'Continuer',
+        back: 'Retour',
+        start: 'Commencer',
+        help: 'Revoir l’introduction',
+      },
       profile: {
         label: 'Profil',
         guest: 'Invité',

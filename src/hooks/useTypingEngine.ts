@@ -4,6 +4,7 @@ import {
   buildTokens,
   TypingEngine,
   type EngineSettings,
+  type SerializedState,
   type Token,
   type TypingSnapshot,
 } from '../typing/engine';
@@ -15,11 +16,15 @@ export interface UseTypingEngine {
   restart: () => void;
   /** Vrai pendant ~150 ms après une frappe erronée (feedback visuel/sonore) */
   errorFlash: boolean;
+  /** État sérialisé courant (null si pas de moteur) */
+  getState: () => SerializedState | null;
 }
 
 export function useTypingEngine(
   page: PageData | null,
-  settings: EngineSettings
+  settings: EngineSettings,
+  /** État sauvegardé à restaurer à la création du moteur (reprise mi-page) */
+  initialState?: SerializedState | null
 ): UseTypingEngine {
   const tokens = useMemo(() => (page ? buildTokens(page) : []), [page]);
   const engineRef = useRef<TypingEngine | null>(null);
@@ -34,7 +39,7 @@ export function useTypingEngine(
       setSnapshot(null);
       return;
     }
-    const engine = new TypingEngine(tokens, settings);
+    const engine = new TypingEngine(tokens, settings, initialState ?? undefined);
     engineRef.current = engine;
     setSnapshot(engine.snapshot());
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,5 +71,7 @@ export function useTypingEngine(
     setSnapshot(engine.snapshot());
   }, [tokens, settings]);
 
-  return { tokens, snapshot, handleText, restart, errorFlash };
+  const getState = useCallback(() => engineRef.current?.serialize() ?? null, []);
+
+  return { tokens, snapshot, handleText, restart, errorFlash, getState };
 }

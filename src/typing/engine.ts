@@ -49,6 +49,29 @@ export interface TypingSnapshot {
   lastWrongChar: string | null;
 }
 
+/** État sérialisé d'une page en cours (reprise après fermeture) */
+export interface SerializedState {
+  /** status en base64 */
+  s: string;
+  /** hadError en base64 */
+  e: string;
+  errorCount: number;
+  correctCount: number;
+}
+
+function u8ToB64(a: Uint8Array): string {
+  let s = '';
+  for (const b of a) s += String.fromCharCode(b);
+  return btoa(s);
+}
+
+function b64ToU8(s: string): Uint8Array {
+  const bin = atob(s);
+  const a = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+  return a;
+}
+
 /** Mots de la basmala, pré-découpés */
 const BASMALA_WORDS = BASMALA.split(' ');
 
@@ -102,12 +125,45 @@ export class TypingEngine {
   private lastWrongChar: string | null = null;
   private settings: EngineSettings;
 
-  constructor(tokens: Token[], settings: EngineSettings) {
+  constructor(tokens: Token[], settings: EngineSettings, initial?: SerializedState) {
     this.tokens = tokens;
     this.settings = settings;
     this.status = new Uint8Array(tokens.length);
     this.hadError = new Uint8Array(tokens.length);
+    if (initial) this.restore(initial);
     this.advanceAuto();
+  }
+
+  /** État compact pour reprise ultérieure */
+  serialize(): SerializedState {
+    return {
+      s: u8ToB64(this.status),
+      e: u8ToB64(this.hadError),
+      errorCount: this.errorCount,
+      correctCount: this.correctCount,
+    };
+  }
+
+  /** Restaure un état sérialisé ; ignoré silencieusement s'il ne correspond pas à la page */
+  private restore(initial: SerializedState) {
+    try {
+      const status = b64ToU8(initial.s);
+      const hadError = b64ToU8(initial.e);
+      if (status.length !== this.tokens.length || hadError.length !== this.tokens.length) {
+        return;
+      }
+      this.status = status;
+      this.hadError = hadError;
+      this.errorCount = initial.errorCount;
+      this.correctCount = initial.correctCount;
+      // Repositionne le curseur sur le premier token non complété
+      this.pos = 0;
+      while (this.pos < this.tokens.length && this.status[this.pos] !== ST_PENDING) {
+        this.pos++;
+      }
+    } catch {
+      // état corrompu → page vierge
+    }
   }
 
   setSettings(settings: EngineSettings) {

@@ -101,5 +101,33 @@ function typeString(engine, str) {
   check('cluster : ordre fatha/shadda inversé accepté', l2 === 'ok' && f === 'ok' && sh === 'ok', `${l2},${f},${sh}`);
 }
 
+// ---- Sérialisation / reprise mi-page ----
+{
+  const tokens = buildTokens(page1);
+  const e1 = new TypingEngine(tokens, { harakatMode: 'none', smallLetters: 'flexible' });
+  typeString(e1, 'بسم الله'); // frappe partielle
+  e1.handleChar('ت'); // + une erreur sur le token courant
+  const saved = e1.serialize();
+  const before = e1.snapshot();
+
+  const e2 = new TypingEngine(tokens, { harakatMode: 'none', smallLetters: 'flexible' }, saved);
+  const after = e2.snapshot();
+  check('reprise : position restaurée', after.pos === before.pos, `${after.pos}≠${before.pos}`);
+  check(
+    'reprise : compteurs restaurés',
+    after.errorCount === before.errorCount && after.correctCount === before.correctCount
+  );
+  check(
+    'reprise : hadError restauré',
+    Buffer.from(after.hadError).equals(Buffer.from(before.hadError))
+  );
+  const cont = typeString(e2, ' الرحمن الرحيم');
+  check('reprise : frappe continue sans erreur', !cont.includes('error'), JSON.stringify(cont));
+
+  // État d'une autre page (longueur différente) → ignoré, moteur vierge
+  const e3 = new TypingEngine(tokens.slice(0, 10), { harakatMode: 'none', smallLetters: 'flexible' }, saved);
+  check('reprise : état de longueur différente ignoré', e3.snapshot().correctCount === 0);
+}
+
 console.log(failures === 0 ? '\nTous les tests passent.' : `\n${failures} échec(s).`);
 process.exit(failures === 0 ? 0 : 1);
