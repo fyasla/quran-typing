@@ -10,9 +10,11 @@ import { loadChapters, loadPage } from './data/loader';
 import { applyLanguage } from './i18n';
 import { useTypingEngine } from './hooks/useTypingEngine';
 import { duePages, toDay, type ReviewCard } from './review/srs';
+import { useAuth } from './store/auth';
 import { useProgress } from './store/progress';
 import { useActiveProfile } from './store/profiles';
 import { clearResume, loadResume, saveResume } from './store/resume';
+import { cloudProfileId, pullAndMerge, schedulePush } from './store/sync';
 import { TOTAL_PAGES, useSettings } from './store/settings';
 import type { Chapter, PageData } from './types';
 
@@ -57,7 +59,19 @@ export default function App() {
   );
 
   const activeProfile = useActiveProfile();
-  const { data: progress, recordSession, reload } = useProgress(activeProfile?.id ?? null);
+  const { user } = useAuth();
+  // Progression effective : compte connecté sinon profil local
+  const profileId = user ? cloudProfileId(user.id) : (activeProfile?.id ?? null);
+  const { data: progress, recordSession, reload } = useProgress(profileId);
+
+  // Connexion → récupère et fusionne les données cloud (+ migration du profil local)
+  useEffect(() => {
+    if (!user) return;
+    pullAndMerge(user.id, activeProfile?.id ?? null).then((merged) => {
+      if (merged) reload();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
   /** Carte planifiée après la page terminée (pour afficher la prochaine échéance) */
   const [scheduledCard, setScheduledCard] = useState<ReviewCard | null>(null);
   const startRef = useRef<number | null>(null);
@@ -89,8 +103,6 @@ export default function App() {
     () => ({ harakatMode, smallLetters }),
     [harakatMode, smallLetters]
   );
-
-  const profileId = activeProfile?.id ?? null;
 
   // Reprise mi-page : état sauvegardé si même page et même mode harakats
   // (relu uniquement quand page/profil changent, moment où le moteur est recréé)
@@ -153,10 +165,11 @@ export default function App() {
   useEffect(() => {
     if (!snapshot?.done || recordedRef.current || tokens.length === 0) return;
     recordedRef.current = true;
-    if (!activeProfile) return;
+    if (!profileId) return;
     const durationMs = startRef.current ? Date.now() - startRef.current : 0;
     setScheduledCard(recordSession(page, accuracy, snapshot.errorCount, durationMs));
-  }, [snapshot, tokens, activeProfile, recordSession, page, accuracy]);
+    if (user) schedulePush(user.id);
+  }, [snapshot, tokens, profileId, user, recordSession, page, accuracy]);
 
   // Sourate courante (premier mot de la page)
   const currentSurah = useMemo(() => {
@@ -220,7 +233,7 @@ export default function App() {
                       {t('review.nextReview', { count: scheduledCard.intervalDays })}
                     </p>
                   )}
-                  {!activeProfile && (
+                  {!profileId && (
                     <p className="next-review muted">{t('review.createProfileHint')}</p>
                   )}
                   <div className="complete-actions">
@@ -263,7 +276,7 @@ export default function App() {
         open={reviewOpen}
         onClose={() => setReviewOpen(false)}
         progress={progress}
-        hasProfile={!!activeProfile}
+        hasProfile={!!profileId}
         onGoToPage={setPage}
       />
     </div>

@@ -568,6 +568,7 @@ body {
 
 .modal {
   background: var(--surface);
+  color: var(--ink);
   border-radius: 14px;
   width: 100%;
   max-width: 540px;
@@ -1047,6 +1048,156 @@ body {
 .theme-choice.on {
   border-color: var(--accent);
   background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ===== Compte (connexion / inscription) ===== */
+.account-modal {
+  max-width: 400px;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.55rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.google-btn:hover {
+  background: var(--surface-2);
+}
+
+.account-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 1rem 0 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.account-divider::before,
+.account-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-soft);
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 0.6rem;
+}
+
+.account-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.account-form input {
+  padding: 0.55rem 0.7rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.account-form input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+
+.account-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--error);
+}
+
+.account-info {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+
+.account-submit {
+  padding: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.account-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.account-links {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+}
+
+/* État du compte dans le popover profil */
+.account-status {
+  padding: 0.45rem 0.7rem 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.account-status strong {
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.account-status small {
+  font-size: 0.75rem;
+}
+
+.sync-synced {
+  color: var(--accent);
+}
+
+.sync-pending {
+  color: var(--text-muted);
+}
+
+.sync-offline {
+  color: var(--text-muted);
+}
+
+.sync-error {
+  color: var(--error);
+}
+
+.popover-item.accent {
   color: var(--accent);
   font-weight: 600;
 }
