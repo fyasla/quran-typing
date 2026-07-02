@@ -188,7 +188,7 @@ export default function MushafPage({
       const name = errorFlash ? 'qt-caret-flash' : 'qt-caret';
       CSS.highlights.set(name, new Highlight(caretRange));
     }
-  }, [snapshot, tokenMap, caretIdx, blindMode, errorFlash]);
+  }, [snapshot, tokenMap, tokens, caretIdx, blindMode, errorFlash]);
 
   // Nettoyage au démontage
   useEffect(() => {

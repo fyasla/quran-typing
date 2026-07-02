@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installation
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests (moteur + SRS)
+        run: npm test
+
+      - name: Tests corpus (604 pages × 3 modes)
+        run: npm run test:corpus
+
+      - name: Build (inclut le typecheck tsc -b)
+        run: npm run build

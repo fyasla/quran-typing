@@ -64,7 +64,6 @@ export function useTypingEngine(
     const engine = new TypingEngine(tokens, settings);
     engineRef.current = engine;
     setSnapshot(engine.snapshot());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokens, settings]);
 
   return { tokens, snapshot, handleText, restart, errorFlash };
