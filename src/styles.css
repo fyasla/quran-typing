@@ -227,6 +227,8 @@ body {
   height: 10px;
   opacity: 0;
   pointer-events: none;
+  /* >= 16px : evite le zoom automatique d'iOS Safari au focus */
+  font-size: 16px;
 }
 
 .focus-hint {
@@ -634,7 +636,15 @@ body {
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
   .topbar {
+    gap: 0.5rem 0.8rem;
+    padding: 0.5rem 0.8rem;
+  }
+  .topbar-nav {
+    gap: 0.5rem 0.8rem;
+  }
+  .topbar-actions {
     gap: 0.6rem;
+    margin-inline-start: 0;
   }
   .mushaf-page {
     padding: 0.9rem 0.7rem;
