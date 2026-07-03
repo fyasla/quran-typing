@@ -172,6 +172,29 @@
 
 .word {
   display: inline-block;
+  position: relative;
+}
+
+/* Remplissage progressif du mot en cours : tranche colorée du même texte,
+   superposée et découpée à la largeur tapée (les ligatures noircissent
+   ainsi frappe après frappe, ce que ::highlight ne sait pas faire). */
+.word-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--qt-ink);
+}
+
+.word-fill.err {
+  color: var(--qt-error);
+}
+
+.word-fill > span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
 }
 
 /* En-tête de sourate */
@@ -229,15 +252,6 @@
   color: #c62828;
 }
 
-/* Progression dans le mot en cours (fond : se découpe au milieu des ligatures) */
-::highlight(qt-ok-now) {
-  background-color: #e3efe8;
-}
-
-::highlight(qt-err-now) {
-  background-color: #f7e3e3;
-}
-
 ::highlight(qt-caret) {
   background-color: #cfe9df;
 }
@@ -257,14 +271,6 @@
 
 [data-theme='dark'] ::highlight(qt-err) {
   color: #e06060;
-}
-
-[data-theme='dark'] ::highlight(qt-ok-now) {
-  background-color: #22322b;
-}
-
-[data-theme='dark'] ::highlight(qt-err-now) {
-  background-color: #452424;
 }
 
 [data-theme='dark'] ::highlight(qt-caret) {

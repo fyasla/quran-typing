@@ -29,15 +29,7 @@ const supportsHighlights =
   'highlights' in CSS &&
   typeof Highlight !== 'undefined';
 
-const HL_NAMES = [
-  'qt-ok',
-  'qt-err',
-  'qt-ok-now',
-  'qt-err-now',
-  'qt-caret',
-  'qt-caret-space',
-  'qt-caret-flash',
-] as const;
+const HL_NAMES = ['qt-ok', 'qt-err', 'qt-caret', 'qt-caret-space', 'qt-caret-flash'] as const;
 
 /** Représentation lisible d'un caractère erroné (espaces et entrée rendus visibles) */
 function displayWrongChar(ch: string): string {
@@ -75,6 +67,17 @@ export default function MushafPage({
   const [wrongCharPos, setWrongCharPos] = useState<{ left: number; top: number } | null>(
     null
   );
+  /**
+   * Remplissage progressif du mot en cours : la couleur des ::highlight ne se
+   * peint que par ligature complète (écritures complexes), alors une copie du
+   * texte, colorée et découpée géométriquement à la largeur tapée, est
+   * superposée — le glyphe noircit ainsi frappe après frappe, même dans الله.
+   */
+  const [fill, setFill] = useState<{
+    key: string;
+    runs: { left: number; width: number; err: boolean }[];
+  } | null>(null);
+  const fillSig = useRef('');
 
   // Position du curseur (reste sur l'espace si c'est un espace qui est attendu)
   const caretIdx = useMemo(() => {
@@ -126,13 +129,8 @@ export default function MushafPage({
 
     const okRanges: Range[] = [];
     const errRanges: Range[] = [];
-    // Progression dans le mot en cours, peinte en FOND : les ligatures de la
-    // police (ex. الله, lettres à alif suscrit) ne se re-colorent qu'en bloc
-    // une fois complètes (limite du rendu des écritures complexes), alors que
-    // le fond se découpe géométriquement — il montre donc l'avancée immédiate.
-    const okNowRanges: Range[] = [];
-    const errNowRanges: Range[] = [];
     let caretRange: Range | null = null;
+    let activeFill: typeof fill = null;
 
     // Si le curseur est sur un espace, le trouver
     const caretToken = caretIdx >= 0 ? tokens[caretIdx] : null;
@@ -158,6 +156,7 @@ export default function MushafPage({
       // Fusionne les caractères contigus de même état en une seule plage
       // (0 = en attente, 1 = correct, 2 = erreur)
       const isActiveWord = el.dataset.w === caretWordKey;
+      const wordLeft = isActiveWord ? el.getBoundingClientRect().left : 0;
       let runState = 0;
       let runStart = 0;
       const flush = (end: number) => {
@@ -166,9 +165,16 @@ export default function MushafPage({
         r.setStart(textNode, runStart);
         r.setEnd(textNode, end);
         (runState === 1 ? okRanges : errRanges).push(r);
-        // Dans le mot en cours : le fond montre la progression avant que la
-        // ligature complète ne change de couleur
-        if (isActiveWord) (runState === 1 ? okNowRanges : errNowRanges).push(r.cloneRange());
+        // Mot en cours : mesure géométrique du run pour le remplissage superposé
+        if (isActiveWord) {
+          const rect = r.getBoundingClientRect();
+          if (!activeFill) activeFill = { key: el.dataset.w as string, runs: [] };
+          activeFill.runs.push({
+            left: rect.left - wordLeft,
+            width: rect.width,
+            err: runState === 2,
+          });
+        }
       };
 
       for (let ci = 0; ci < len; ci++) {
@@ -202,13 +208,18 @@ export default function MushafPage({
 
     CSS.highlights.set('qt-ok', new Highlight(...okRanges));
     CSS.highlights.set('qt-err', new Highlight(...errRanges));
-    CSS.highlights.set('qt-ok-now', new Highlight(...okNowRanges));
-    CSS.highlights.set('qt-err-now', new Highlight(...errNowRanges));
     CSS.highlights.delete('qt-caret');
     CSS.highlights.delete('qt-caret-flash');
     if (caretRange) {
       const name = errorFlash ? 'qt-caret-flash' : 'qt-caret';
       CSS.highlights.set(name, new Highlight(caretRange));
+    }
+
+    // Ne re-rend le remplissage que s'il a changé
+    const sig = JSON.stringify(activeFill);
+    if (sig !== fillSig.current) {
+      fillSig.current = sig;
+      setFill(activeFill);
     }
   }, [snapshot, tokenMap, tokens, caretIdx, blindMode, errorFlash]);
 
@@ -277,10 +288,25 @@ export default function MushafPage({
       );
     }
 
-    // Un seul nœud texte par mot → ligatures intactes
+    // Un seul nœud texte par mot → ligatures intactes.
+    // NB : le nœud texte doit rester firstChild (les plages s'y accrochent).
+    const key = `${lineIdx}:${wordIdx}`;
     return (
-      <span className="word" data-w={`${lineIdx}:${wordIdx}`} key={wordIdx}>
+      <span className="word" data-w={key} key={wordIdx}>
         {text}
+        {fill && fill.key === key && (
+          <span aria-hidden="true">
+            {fill.runs.map((r, i) => (
+              <span
+                key={i}
+                className={`word-fill${r.err ? ' err' : ''}`}
+                style={{ left: r.left, width: r.width }}
+              >
+                <span style={{ left: -r.left }}>{text}</span>
+              </span>
+            ))}
+          </span>
+        )}
       </span>
     );
   };
