@@ -43,3 +43,19 @@ export type HarakatMode = 'none' | 'important' | 'all';
 export type SmallLettersMode = 'strict' | 'flexible';
 export type KeyboardMode = 'system' | 'custom';
 export type Theme = 'auto' | 'light' | 'dark';
+
+// Objectif de rythme (quantité à travailler par période)
+
+export type GoalUnit = 'page' | 'verse';
+export type GoalPeriodUnit = 'day' | 'week';
+
+export interface Goal {
+  /** Quantité à travailler par période (page : min ¼ par pas de ¼ ; verset : min 1) */
+  amount: number;
+  unit: GoalUnit;
+  /** « tous les N jours/semaines » */
+  every: number;
+  perUnit: GoalPeriodUnit;
+  /** Jour d'ancrage des périodes (YYYY-MM-DD, date de création de l'objectif) */
+  since: string;
+}

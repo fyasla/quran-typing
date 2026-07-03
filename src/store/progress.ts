@@ -71,7 +71,13 @@ export function importProgress(profileId: string, json: string): boolean {
 export interface UseProgress {
   data: ProgressData;
   /** Enregistre une page terminée et met à jour sa carte de révision. Retourne la carte planifiée. */
-  recordSession: (page: number, accuracy: number, errors: number, durationMs: number) => ReviewCard;
+  recordSession: (
+    page: number,
+    accuracy: number,
+    errors: number,
+    durationMs: number,
+    verses: number
+  ) => ReviewCard;
   /** Recharge depuis le localStorage (après un import) */
   reload: () => void;
 }
@@ -86,7 +92,13 @@ export function useProgress(profileId: string | null): UseProgress {
   }, [profileId]);
 
   const recordSession = useCallback(
-    (page: number, accuracy: number, errors: number, durationMs: number): ReviewCard => {
+    (
+      page: number,
+      accuracy: number,
+      errors: number,
+      durationMs: number,
+      verses: number
+    ): ReviewCard => {
       const today = toDay(new Date());
       const session: SessionRecord = {
         page,
@@ -94,6 +106,7 @@ export function useProgress(profileId: string | null): UseProgress {
         accuracy,
         errors,
         durationMs,
+        verses,
       };
       const prev = data.cards[page] ?? newCard(page, today);
       const card = reviewCard(prev, accuracy, today);

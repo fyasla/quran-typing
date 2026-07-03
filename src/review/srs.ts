@@ -31,6 +31,8 @@ export interface SessionRecord {
   errors: number;
   /** Durée de la session en millisecondes */
   durationMs: number;
+  /** Versets complétés sur cette page (médaillons passés) — pour l'objectif */
+  verses?: number;
 }
 
 /** Jour local au format YYYY-MM-DD */

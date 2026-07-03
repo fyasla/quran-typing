@@ -164,15 +164,21 @@ export default function App() {
         )
       : 100;
 
+  // Versets de la page (médaillons) — pour l'objectif de rythme
+  const pageVerses = useMemo(
+    () => tokens.filter((t) => t.kind === 'marker').length,
+    [tokens]
+  );
+
   // Page terminée → enregistre la session et planifie la révision
   useEffect(() => {
     if (!snapshot?.done || recordedRef.current || tokens.length === 0) return;
     recordedRef.current = true;
     if (!profileId) return;
     const durationMs = startRef.current ? Date.now() - startRef.current : 0;
-    setScheduledCard(recordSession(page, accuracy, snapshot.errorCount, durationMs));
+    setScheduledCard(recordSession(page, accuracy, snapshot.errorCount, durationMs, pageVerses));
     if (user) schedulePush(user.id);
-  }, [snapshot, tokens, profileId, user, recordSession, page, accuracy]);
+  }, [snapshot, tokens, profileId, user, recordSession, page, accuracy, pageVerses]);
 
   // Sourate courante (premier mot de la page)
   const currentSurah = useMemo(() => {
@@ -187,6 +193,14 @@ export default function App() {
 
   const progressRatio =
     snapshot && tokens.length > 0 ? Math.min(1, snapshot.pos / tokens.length) : 0;
+
+  // Avancée en direct sur la page courante (fraction de page, versets passés)
+  const liveGoal = useMemo(() => {
+    if (!snapshot || snapshot.done || tokens.length === 0) return { pageFraction: 0, verses: 0 };
+    let verses = 0;
+    for (let i = 0; i < snapshot.pos; i++) if (tokens[i].kind === 'marker') verses++;
+    return { pageFraction: snapshot.pos / tokens.length, verses };
+  }, [snapshot, tokens]);
 
   const dueCount = useMemo(
     () => duePages(progress.cards, toDay(new Date())).length,
@@ -290,6 +304,11 @@ export default function App() {
         progress={progress}
         hasProfile={!!profileId}
         onGoToPage={setPage}
+        live={liveGoal}
+        onOpenSettings={() => {
+          setReviewOpen(false);
+          setSettingsOpen(true);
+        }}
       />
       <BottomNav
         onOpenReview={() => setReviewOpen(true)}

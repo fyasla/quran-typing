@@ -5,8 +5,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { defaultGoal } from '../review/goal';
+import { toDay } from '../review/srs';
 import { useSettings } from '../store/settings';
 import type { HarakatMode, KeyboardMode } from '../types';
+import GoalEditor from './GoalEditor';
 
 interface Props {
   open: boolean;
@@ -42,13 +45,18 @@ function ChoiceList<T extends string>({
   );
 }
 
-/** Onboarding en 3 étapes : principe, choix du clavier, niveau de difficulté */
+const STEPS = 4;
+
+/** Onboarding : principe, clavier, niveau de difficulté, objectif de rythme */
 export default function WelcomeModal({ open, onClose }: Props) {
   const { t } = useTranslation();
   const s = useSettings();
   const [step, setStep] = useState(0);
+  const goalValue = s.goal ?? defaultGoal(toDay(new Date()));
 
   const close = () => {
+    // L'objectif affiché devient l'objectif retenu, même sans interaction
+    if (!s.goal) s.setGoal(goalValue);
     setStep(0);
     onClose();
   };
@@ -136,6 +144,14 @@ export default function WelcomeModal({ open, onClose }: Props) {
           </>
         )}
 
+        {step === 3 && (
+          <>
+            <DialogTitle>{t('goal.title')}</DialogTitle>
+            <p className="text-muted-foreground -mt-1 text-sm">{t('goal.intro')}</p>
+            <GoalEditor value={goalValue} onChange={s.setGoal} />
+          </>
+        )}
+
         <div className="welcome-nav mt-1 flex items-center justify-between">
           {step > 0 ? (
             <Button variant="secondary" onClick={() => setStep(step - 1)}>
@@ -145,7 +161,7 @@ export default function WelcomeModal({ open, onClose }: Props) {
             <span />
           )}
           <span className="welcome-dots flex gap-1.5">
-            {[0, 1, 2].map((i) => (
+            {Array.from({ length: STEPS }, (_, i) => i).map((i) => (
               <i
                 key={i}
                 className={cn(
@@ -155,7 +171,7 @@ export default function WelcomeModal({ open, onClose }: Props) {
               />
             ))}
           </span>
-          {step < 2 ? (
+          {step < STEPS - 1 ? (
             <Button className="primary" onClick={() => setStep(step + 1)}>
               {t('welcome.next')}
             </Button>

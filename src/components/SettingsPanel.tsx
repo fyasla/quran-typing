@@ -12,7 +12,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CircleHelp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_LABELS, LANGUAGES, type Language } from '../i18n';
+import { defaultGoal } from '../review/goal';
+import { toDay } from '../review/srs';
 import { useSettings } from '../store/settings';
+import GoalEditor from './GoalEditor';
 import type { HarakatMode, KeyboardMode, SmallLettersMode, Theme } from '../types';
 
 interface Props {
@@ -154,6 +157,12 @@ export default function SettingsPanel({ open, onClose, onShowWelcome }: Props) {
             },
           ]}
         />
+
+        {/* Objectif de rythme */}
+        <section>
+          <h3 className="mb-2 text-[13px] font-semibold">{t('goal.label')}</h3>
+          <GoalEditor value={s.goal ?? defaultGoal(toDay(new Date()))} onChange={s.setGoal} />
+        </section>
 
         {/* Mode aveugle */}
         <section className="flex items-start justify-between gap-4">

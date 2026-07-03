@@ -4,11 +4,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CalendarCheck, Flame, LibraryBig, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CalendarCheck, Flame, Goal as GoalIcon, LibraryBig, Target } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { daysLeft, formatAmount, periodStart, progressSince } from '../review/goal';
 import { computeStreak, duePages, toDay } from '../review/srs';
 import type { ProgressData } from '../store/progress';
+import { useSettings } from '../store/settings';
 
 interface Props {
   open: boolean;
@@ -16,11 +19,37 @@ interface Props {
   progress: ProgressData;
   hasProfile: boolean;
   onGoToPage: (page: number) => void;
+  /** Avancée en direct sur la page courante */
+  live: { pageFraction: number; verses: number };
+  onOpenSettings: () => void;
 }
 
-export default function ReviewPanel({ open, onClose, progress, hasProfile, onGoToPage }: Props) {
+export default function ReviewPanel({
+  open,
+  onClose,
+  progress,
+  hasProfile,
+  onGoToPage,
+  live,
+  onOpenSettings,
+}: Props) {
   const { t } = useTranslation();
+  const { goal } = useSettings();
   const today = toDay(new Date());
+
+  // Progression vers l'objectif dans la période courante
+  const goalState = useMemo(() => {
+    if (!goal) return null;
+    const done = progressSince(progress.sessions, periodStart(goal, today));
+    const value =
+      goal.unit === 'page' ? done.pages + live.pageFraction : done.verses + live.verses;
+    return {
+      value,
+      ratio: Math.min(1, value / goal.amount),
+      reached: value >= goal.amount,
+      left: daysLeft(goal, today),
+    };
+  }, [goal, progress.sessions, today, live]);
 
   const due = useMemo(() => duePages(progress.cards, today), [progress.cards, today]);
   const streak = useMemo(
@@ -57,6 +86,54 @@ export default function ReviewPanel({ open, onClose, progress, hasProfile, onGoT
           <p className="review-hint bg-accent text-accent-foreground rounded-lg px-3.5 py-2.5 text-[13px] leading-relaxed">
             {t('review.createProfileHint')}
           </p>
+        )}
+
+        {goal && goalState ? (
+          <section className="goal-card bg-muted/60 rounded-xl px-4 py-3">
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className="flex items-center gap-1.5 text-[13px] font-semibold">
+                <GoalIcon className="text-primary size-4" />
+                {t('goal.summary', {
+                  amount: goal.unit === 'page' ? formatAmount(goal.amount) : goal.amount,
+                  unit: t(goal.unit === 'page' ? 'goal.unitPage' : 'goal.unitVerse', {
+                    count: Math.max(1, Math.ceil(goal.amount)),
+                  }),
+                  freq:
+                    goal.every === 1
+                      ? t(goal.perUnit === 'day' ? 'goal.everyDay' : 'goal.everyWeek')
+                      : t(goal.perUnit === 'day' ? 'goal.everyNDays' : 'goal.everyNWeeks', {
+                          count: goal.every,
+                        }),
+                })}
+              </h3>
+              <span className="text-muted-foreground shrink-0 text-xs">
+                {t('goal.daysLeft', { count: goalState.left })}
+              </span>
+            </div>
+            <div className="bg-border/70 mt-2.5 h-2 overflow-hidden rounded-full">
+              <div
+                className="goal-bar bg-primary h-full rounded-full transition-[width] duration-300"
+                style={{ width: `${goalState.ratio * 100}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-xs font-medium">
+              {goalState.reached ? (
+                <span className="text-primary">{t('goal.reached')}</span>
+              ) : (
+                <span className="text-muted-foreground goal-count">
+                  {goal.unit === 'page'
+                    ? formatAmount(Math.floor(goalState.value * 4) / 4)
+                    : Math.floor(goalState.value)}{' '}
+                  / {goal.unit === 'page' ? formatAmount(goal.amount) : goal.amount}
+                </span>
+              )}
+            </p>
+          </section>
+        ) : (
+          <Button variant="outline" size="sm" className="goal-set self-start" onClick={onOpenSettings}>
+            <GoalIcon />
+            {t('goal.set')}
+          </Button>
         )}
 
         <div className="stat-tiles grid grid-cols-2 gap-2.5 sm:grid-cols-4">
