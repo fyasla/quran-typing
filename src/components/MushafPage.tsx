@@ -29,7 +29,15 @@ const supportsHighlights =
   'highlights' in CSS &&
   typeof Highlight !== 'undefined';
 
-const HL_NAMES = ['qt-ok', 'qt-err', 'qt-caret', 'qt-caret-space', 'qt-caret-flash'] as const;
+const HL_NAMES = [
+  'qt-ok',
+  'qt-err',
+  'qt-ok-now',
+  'qt-err-now',
+  'qt-caret',
+  'qt-caret-space',
+  'qt-caret-flash',
+] as const;
 
 /** Représentation lisible d'un caractère erroné (espaces et entrée rendus visibles) */
 function displayWrongChar(ch: string): string {
@@ -118,10 +126,18 @@ export default function MushafPage({
 
     const okRanges: Range[] = [];
     const errRanges: Range[] = [];
+    // Progression dans le mot en cours, peinte en FOND : les ligatures de la
+    // police (ex. الله, lettres à alif suscrit) ne se re-colorent qu'en bloc
+    // une fois complètes (limite du rendu des écritures complexes), alors que
+    // le fond se découpe géométriquement — il montre donc l'avancée immédiate.
+    const okNowRanges: Range[] = [];
+    const errNowRanges: Range[] = [];
     let caretRange: Range | null = null;
 
     // Si le curseur est sur un espace, le trouver
     const caretToken = caretIdx >= 0 ? tokens[caretIdx] : null;
+    const caretWordKey =
+      caretToken && caretToken.line >= 0 ? `${caretToken.line}:${caretToken.word}` : null;
     if (caretToken && caretToken.kind === 'space') {
       // Trouver l'élément espace dans le DOM
       const spaceEl = root.querySelector(`[data-space="${caretIdx}"]`);
@@ -141,6 +157,7 @@ export default function MushafPage({
 
       // Fusionne les caractères contigus de même état en une seule plage
       // (0 = en attente, 1 = correct, 2 = erreur)
+      const isActiveWord = el.dataset.w === caretWordKey;
       let runState = 0;
       let runStart = 0;
       const flush = (end: number) => {
@@ -149,6 +166,9 @@ export default function MushafPage({
         r.setStart(textNode, runStart);
         r.setEnd(textNode, end);
         (runState === 1 ? okRanges : errRanges).push(r);
+        // Dans le mot en cours : le fond montre la progression avant que la
+        // ligature complète ne change de couleur
+        if (isActiveWord) (runState === 1 ? okNowRanges : errNowRanges).push(r.cloneRange());
       };
 
       for (let ci = 0; ci < len; ci++) {
@@ -182,6 +202,8 @@ export default function MushafPage({
 
     CSS.highlights.set('qt-ok', new Highlight(...okRanges));
     CSS.highlights.set('qt-err', new Highlight(...errRanges));
+    CSS.highlights.set('qt-ok-now', new Highlight(...okNowRanges));
+    CSS.highlights.set('qt-err-now', new Highlight(...errNowRanges));
     CSS.highlights.delete('qt-caret');
     CSS.highlights.delete('qt-caret-flash');
     if (caretRange) {

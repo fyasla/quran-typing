@@ -229,6 +229,15 @@
   color: #c62828;
 }
 
+/* Progression dans le mot en cours (fond : se découpe au milieu des ligatures) */
+::highlight(qt-ok-now) {
+  background-color: #e3efe8;
+}
+
+::highlight(qt-err-now) {
+  background-color: #f7e3e3;
+}
+
 ::highlight(qt-caret) {
   background-color: #cfe9df;
 }
@@ -248,6 +257,14 @@
 
 [data-theme='dark'] ::highlight(qt-err) {
   color: #e06060;
+}
+
+[data-theme='dark'] ::highlight(qt-ok-now) {
+  background-color: #22322b;
+}
+
+[data-theme='dark'] ::highlight(qt-err-now) {
+  background-color: #452424;
 }
 
 [data-theme='dark'] ::highlight(qt-caret) {
