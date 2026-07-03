@@ -5,6 +5,7 @@ export default {
   },
   nav: {
     read: 'القراءة',
+    stats: 'الإحصاءات',
     page: 'الصفحة',
     surah: 'السورة',
     prevPage: 'الصفحة السابقة',
@@ -14,6 +15,7 @@ export default {
   },
   settings: {
     title: 'الإعدادات',
+    subtitle: 'الكتابة والمظهر والهدف — كل شيء هنا.',
     close: 'إغلاق',
     harakat: {
       label: 'الحركات',
@@ -152,8 +154,23 @@ export default {
     errRateLimit: 'محاولات كثيرة — أعد المحاولة بعد دقائق.',
     errGeneric: 'حدث خطأ. أعد المحاولة.',
   },
+  stats: {
+    title: 'الإحصاءات',
+    subtitle: 'تقدمك وهدفك ومراجعاتك.',
+    activity: 'النشاط — صفحات في اليوم (آخر 14 يومًا)',
+    global: 'المصحف كاملًا',
+  },
   profile: {
     label: 'الملف الشخصي',
+    title: 'الملف الشخصي',
+    subtitle: 'حسابك وملفاتك المحلية وبياناتك.',
+    manage: 'إدارة الملف',
+    cloudTitle: 'الحساب',
+    cloudDesc: 'سجّل الدخول لمزامنة مراجعاتك بين أجهزتك.',
+    localTitle: 'ملفات محلية',
+    localDesc: 'أكثر من شخص على هذا الجهاز؟ لكل ملف تقدمه الخاص.',
+    dataTitle: 'البيانات',
+    dataDesc: 'انسخ تقدمك احتياطيًا أو انقله بصيغة JSON.',
     guest: 'زائر',
     create: 'إنشاء ملف شخصي',
     namePlaceholder: 'اسمك…',

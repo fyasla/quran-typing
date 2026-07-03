@@ -7,8 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { BookOpenCheck, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { ChartColumn, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'wouter';
 import { TOTAL_PAGES, useSettings } from '../store/settings';
 import type { Chapter } from '../types';
 import ProfileMenu from './ProfileMenu';
@@ -16,21 +17,11 @@ import ProfileMenu from './ProfileMenu';
 interface Props {
   chapters: Chapter[];
   currentSurah: number | null;
-  onOpenSettings: () => void;
-  onOpenReview: () => void;
-  /** Nombre de pages dues aujourd'hui (badge sur le bouton Révision) */
+  /** Nombre de pages dues aujourd'hui (badge sur le lien Stats) */
   dueCount: number;
-  onDataImported: () => void;
 }
 
-export default function TopBar({
-  chapters,
-  currentSurah,
-  onOpenSettings,
-  onOpenReview,
-  dueCount,
-  onDataImported,
-}: Props) {
+export default function TopBar({ chapters, currentSurah, dueCount }: Props) {
   const { t } = useTranslation();
   const { page, setPage } = useSettings();
 
@@ -78,14 +69,14 @@ export default function TopBar({
     <header className="border-border/70 bg-card/85 sticky top-0 z-30 border-b backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-3 sm:gap-3 sm:px-4">
         {/* Marque */}
-        <div className="flex shrink-0 items-center gap-2">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
           <span className="brand-glyph text-primary text-2xl leading-none" aria-hidden="true">
             قٓ
           </span>
           <h1 className="hidden text-[15px] font-semibold tracking-tight lg:block">
             Quran Typing
           </h1>
-        </div>
+        </Link>
 
         {/* Navigation sourate / page */}
         <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
@@ -112,28 +103,32 @@ export default function TopBar({
         {/* Actions */}
         <div className="flex shrink-0 items-center gap-1.5">
           <Button
+            asChild
             variant="ghost"
             size="sm"
-            onClick={onOpenReview}
             className="review-btn text-foreground/80 relative hidden md:inline-flex"
           >
-            <BookOpenCheck />
-            {t('review.title')}
-            {dueCount > 0 && (
-              <Badge variant="destructive" className="due-badge px-1.5 py-0 text-[11px]">
-                {dueCount}
-              </Badge>
-            )}
+            <Link href="/stats">
+              <ChartColumn />
+              {t('nav.stats')}
+              {dueCount > 0 && (
+                <Badge variant="destructive" className="due-badge px-1.5 py-0 text-[11px]">
+                  {dueCount}
+                </Badge>
+              )}
+            </Link>
           </Button>
-          <ProfileMenu onDataImported={onDataImported} />
+          <ProfileMenu />
           <Button
+            asChild
             variant="ghost"
             size="icon-sm"
-            onClick={onOpenSettings}
             aria-label={t('nav.settings')}
             className="settings-btn text-muted-foreground hidden md:inline-flex"
           >
-            <Settings />
+            <Link href="/settings">
+              <Settings />
+            </Link>
           </Button>
         </div>
       </div>

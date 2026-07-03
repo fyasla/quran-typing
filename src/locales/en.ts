@@ -5,6 +5,7 @@ export default {
   },
   nav: {
     read: 'Read',
+    stats: 'Stats',
     page: 'Page',
     surah: 'Surah',
     prevPage: 'Previous page',
@@ -14,6 +15,7 @@ export default {
   },
   settings: {
     title: 'Settings',
+    subtitle: 'Typing, appearance, goal — everything is here.',
     close: 'Close',
     harakat: {
       label: 'Harakat',
@@ -133,8 +135,23 @@ export default {
     errRateLimit: 'Too many attempts — try again in a few minutes.',
     errGeneric: 'Something went wrong. Please try again.',
   },
+  stats: {
+    title: 'Statistics',
+    subtitle: 'Your progress, goal and reviews.',
+    activity: 'Activity — pages per day (last 14 days)',
+    global: 'Whole mushaf',
+  },
   profile: {
     label: 'Profile',
+    title: 'Profile',
+    subtitle: 'Your account, local profiles and data.',
+    manage: 'Manage profile',
+    cloudTitle: 'Account',
+    cloudDesc: 'Sign in to sync your reviews across devices.',
+    localTitle: 'Local profiles',
+    localDesc: 'Multiple people on this device? Each profile keeps its own progress.',
+    dataTitle: 'Data',
+    dataDesc: 'Back up or transfer your progress as JSON.',
     guest: 'Guest',
     create: 'Create a profile',
     namePlaceholder: 'Your name…',

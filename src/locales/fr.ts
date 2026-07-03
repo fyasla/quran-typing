@@ -5,6 +5,7 @@ export default {
   },
   nav: {
     read: 'Lire',
+    stats: 'Stats',
     page: 'Page',
     surah: 'Sourate',
     prevPage: 'Page précédente',
@@ -14,6 +15,7 @@ export default {
   },
   settings: {
     title: 'Réglages',
+    subtitle: 'Frappe, apparence, objectif — tout se règle ici.',
     close: 'Fermer',
     harakat: {
       label: 'Harakats',
@@ -135,8 +137,23 @@ export default {
     errRateLimit: 'Trop de tentatives — réessayez dans quelques minutes.',
     errGeneric: 'Une erreur est survenue. Réessayez.',
   },
+  stats: {
+    title: 'Statistiques',
+    subtitle: 'Votre progression, votre objectif et vos révisions.',
+    activity: 'Activité — pages par jour (14 derniers jours)',
+    global: 'Mushaf entier',
+  },
   profile: {
     label: 'Profil',
+    title: 'Profil',
+    subtitle: 'Votre compte, vos profils locaux et vos données.',
+    manage: 'Gérer le profil',
+    cloudTitle: 'Compte',
+    cloudDesc: 'Connectez-vous pour synchroniser vos révisions entre vos appareils.',
+    localTitle: 'Profils locaux',
+    localDesc: 'Plusieurs personnes sur cet appareil ? Chaque profil a sa propre progression.',
+    dataTitle: 'Données',
+    dataDesc: 'Sauvegardez ou transférez votre progression au format JSON.',
     guest: 'Invité',
     create: 'Créer un profil',
     namePlaceholder: 'Votre nom…',
