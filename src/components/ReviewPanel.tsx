@@ -1,3 +1,10 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { CalendarCheck, Flame, LibraryBig, Target } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { computeStreak, duePages, toDay } from '../review/srs';
@@ -28,50 +35,58 @@ export default function ReviewPanel({ open, onClose, progress, hasProfile, onGoT
     return Math.round(last.reduce((s, r) => s + r.accuracy, 0) / last.length);
   }, [progress.sessions]);
 
-  if (!open) return null;
+  const tiles = [
+    { icon: CalendarCheck, value: String(due.length), label: t('review.dueToday') },
+    { icon: Flame, value: String(streak), label: t('review.streak') },
+    { icon: LibraryBig, value: String(learned), label: t('review.learned') },
+    {
+      icon: Target,
+      value: avgAccuracy === null ? '—' : `${avgAccuracy}%`,
+      label: t('review.avgAccuracy'),
+    },
+  ];
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal review-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{t('review.title')}</h2>
-          <button type="button" onClick={onClose} aria-label={t('settings.close')}>
-            ✕
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="review-modal max-h-[88dvh] gap-5 overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('review.title')}</DialogTitle>
+        </DialogHeader>
 
-        {!hasProfile && <p className="review-hint">{t('review.createProfileHint')}</p>}
+        {!hasProfile && (
+          <p className="review-hint bg-accent text-accent-foreground rounded-lg px-3.5 py-2.5 text-[13px] leading-relaxed">
+            {t('review.createProfileHint')}
+          </p>
+        )}
 
-        <div className="stat-tiles">
-          <div className="stat-tile">
-            <strong>{due.length}</strong>
-            <span>{t('review.dueToday')}</span>
-          </div>
-          <div className="stat-tile">
-            <strong>{streak}</strong>
-            <span>{t('review.streak')}</span>
-          </div>
-          <div className="stat-tile">
-            <strong>{learned}</strong>
-            <span>{t('review.learned')}</span>
-          </div>
-          <div className="stat-tile">
-            <strong>{avgAccuracy === null ? '—' : `${avgAccuracy}%`}</strong>
-            <span>{t('review.avgAccuracy')}</span>
-          </div>
+        <div className="stat-tiles grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          {tiles.map(({ icon: Icon, value, label }) => (
+            <div
+              key={label}
+              className="stat-tile bg-muted/60 flex flex-col items-center gap-0.5 rounded-xl px-2 py-3.5 text-center"
+            >
+              <Icon className="text-primary/70 mb-1 size-4" strokeWidth={2} />
+              <strong className="text-primary text-xl leading-none font-semibold tabular-nums">
+                {value}
+              </strong>
+              <span className="text-muted-foreground text-[11px] leading-tight">{label}</span>
+            </div>
+          ))}
         </div>
 
         <section className="review-section">
-          <h3>{t('review.due')}</h3>
+          <h3 className="text-muted-foreground mb-2 text-[13px] font-semibold">
+            {t('review.due')}
+          </h3>
           {due.length === 0 ? (
-            <p className="review-empty">{t('review.none')}</p>
+            <p className="review-empty text-muted-foreground text-sm">{t('review.none')}</p>
           ) : (
-            <div className="due-list">
+            <div className="due-list flex flex-wrap gap-1.5">
               {due.map((card) => (
                 <button
                   key={card.page}
                   type="button"
-                  className="due-page"
+                  className="due-page border-primary/50 text-primary hover:bg-primary rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors hover:text-white"
                   title={t('review.lastAccuracy', { accuracy: card.lastAccuracy })}
                   onClick={() => {
                     onGoToPage(card.page);
@@ -87,20 +102,26 @@ export default function ReviewPanel({ open, onClose, progress, hasProfile, onGoT
 
         {recent.length > 0 && (
           <section className="review-section">
-            <h3>{t('review.recent')}</h3>
-            <ul className="session-list">
+            <h3 className="text-muted-foreground mb-1 text-[13px] font-semibold">
+              {t('review.recent')}
+            </h3>
+            <ul className="session-list divide-border/70 divide-y text-sm">
               {recent.map((s, i) => (
-                <li key={`${s.date}-${i}`}>
-                  <span>
+                <li key={`${s.date}-${i}`} className="flex items-baseline gap-3 py-2">
+                  <span className="flex-1">
                     {t('nav.page')} {s.page}
                   </span>
-                  <span className="muted">
+                  <span className="muted text-muted-foreground text-xs">
                     {new Date(s.date).toLocaleDateString(undefined, {
                       day: 'numeric',
                       month: 'short',
                     })}
                   </span>
-                  <span className={s.accuracy >= 90 ? 'acc-good' : 'acc-low'}>
+                  <span
+                    className={`text-[13px] font-semibold tabular-nums ${
+                      s.accuracy >= 90 ? 'acc-good text-primary' : 'acc-low text-destructive'
+                    }`}
+                  >
                     {s.accuracy}%
                   </span>
                 </li>
@@ -108,7 +129,7 @@ export default function ReviewPanel({ open, onClose, progress, hasProfile, onGoT
             </ul>
           </section>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

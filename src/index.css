@@ -1,0 +1,107 @@
+/* Socle Tailwind v4 + thème shadcn « manuscrit raffiné ».
+   Le rendu du mushaf lui-même vit dans styles.css (île CSS dédiée). */
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Le thème sombre est piloté par data-theme (voir App.tsx), pas par .dark */
+@custom-variant dark (&:is([data-theme='dark'] *));
+
+:root {
+  --background: #f3eee4;
+  --foreground: #26221a;
+  --card: #fdfbf5;
+  --card-foreground: #26221a;
+  --popover: #fffdf8;
+  --popover-foreground: #26221a;
+  --primary: #0e7a5f;
+  --primary-foreground: #ffffff;
+  --secondary: #ebe4d2;
+  --secondary-foreground: #4a4436;
+  --muted: #ece7d9;
+  --muted-foreground: #7a7466;
+  --accent: #e3f1ec;
+  --accent-foreground: #0b6650;
+  --destructive: #c62828;
+  --destructive-foreground: #ffffff;
+  --border: #ddd5c2;
+  --input: #d3cab2;
+  --ring: #0e7a5f;
+  --gold: #c9b98a;
+  --radius: 0.625rem;
+}
+
+[data-theme='dark'] {
+  --background: #15151d;
+  --foreground: #e6e0d0;
+  --card: #1d1d27;
+  --card-foreground: #e6e0d0;
+  --popover: #222230;
+  --popover-foreground: #e6e0d0;
+  --primary: #2fae8b;
+  --primary-foreground: #07231b;
+  --secondary: #2a2a38;
+  --secondary-foreground: #d5cfc0;
+  --muted: #262630;
+  --muted-foreground: #a09a8c;
+  --accent: #16352b;
+  --accent-foreground: #4cc9a4;
+  --destructive: #e06060;
+  --destructive-foreground: #ffffff;
+  --border: #32323f;
+  --input: #3a3a48;
+  --ring: #2fae8b;
+  --gold: #4d4a3f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-family: var(--font-sans);
+  }
+  /* L'UI arabe utilise la pile système (meilleures formes contextuelles) */
+  html[lang='ar'] {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

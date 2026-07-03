@@ -4,6 +4,7 @@ export default {
     subtitle: 'Learn the Holy Quran by typing it',
   },
   nav: {
+    read: 'Read',
     page: 'Page',
     surah: 'Surah',
     prevPage: 'Previous page',

@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import BottomNav from './components/BottomNav';
 import MushafPage from './components/MushafPage';
 import ReviewPanel from './components/ReviewPanel';
 import SettingsPanel from './components/SettingsPanel';
@@ -191,7 +194,7 @@ export default function App() {
   );
 
   return (
-    <div className="app">
+    <div className="app flex min-h-dvh flex-col">
       <TopBar
         chapters={chapters}
         currentSurah={currentSurah}
@@ -201,14 +204,21 @@ export default function App() {
         onDataImported={reload}
       />
 
-      <div className="progress-bar">
-        <div className="progress-fill" style={{ width: `${progressRatio * 100}%` }} />
+      <div className="bg-muted h-1">
+        <div
+          className="bg-primary h-full transition-[width] duration-150"
+          style={{ width: `${progressRatio * 100}%` }}
+        />
       </div>
 
-      <main className="main">
-        {loadError && <p className="load-error">{t('typing.loadError')}</p>}
+      <main className="main flex flex-1 items-start justify-center px-2 pt-4 pb-24 sm:px-3 md:pb-10">
+        {loadError && (
+          <p className="load-error text-destructive mt-16 max-w-md text-center text-sm">
+            {t('typing.loadError')}
+          </p>
+        )}
         {!loadError && (!pageData || !snapshot) && (
-          <p className="loading">{t('typing.loading')}</p>
+          <p className="loading text-muted-foreground mt-16 text-sm">{t('typing.loading')}</p>
         )}
         {pageData && snapshot && (
           <TypingArea keyboardMode={keyboardMode} onText={onText}>
@@ -221,33 +231,35 @@ export default function App() {
               chapters={chapters}
             />
             {snapshot.done && (
-              <div className="complete-overlay">
-                <div className="complete-card">
-                  <h2>{t('typing.pageComplete')}</h2>
-                  <p>
+              <div className="complete-overlay absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/80 backdrop-blur-[2px]">
+                <div className="complete-card bg-card animate-in fade-in zoom-in-95 mx-4 w-full max-w-sm rounded-2xl border p-7 text-center shadow-xl duration-200">
+                  <CheckCircle2 className="text-primary mx-auto mb-3 size-10" strokeWidth={1.8} />
+                  <h2 className="text-primary text-xl font-semibold">
+                    {t('typing.pageComplete')}
+                  </h2>
+                  <p className="text-muted-foreground mt-1.5 text-sm">
                     {t('typing.accuracy')} : {accuracy}% — {snapshot.errorCount}{' '}
                     {t('typing.errors')}
                   </p>
                   {scheduledCard && (
-                    <p className="next-review">
+                    <p className="next-review bg-accent text-accent-foreground mt-3 rounded-lg px-3 py-2 text-sm font-medium">
                       {t('review.nextReview', { count: scheduledCard.intervalDays })}
                     </p>
                   )}
                   {!profileId && (
-                    <p className="next-review muted">{t('review.createProfileHint')}</p>
+                    <p className="next-review muted text-muted-foreground mt-3 text-xs">
+                      {t('review.createProfileHint')}
+                    </p>
                   )}
-                  <div className="complete-actions">
-                    <button type="button" onClick={onRestart}>
+                  <div className="complete-actions mt-5 flex justify-center gap-2.5">
+                    <Button variant="secondary" onClick={onRestart}>
                       {t('typing.restart')}
-                    </button>
+                    </Button>
                     {page < TOTAL_PAGES && (
-                      <button
-                        type="button"
-                        className="primary"
-                        onClick={() => setPage(page + 1)}
-                      >
+                      <Button className="primary" onClick={() => setPage(page + 1)}>
                         {t('typing.continueNext')}
-                      </button>
+                        <ArrowRight className="rtl:rotate-180" />
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -278,6 +290,17 @@ export default function App() {
         progress={progress}
         hasProfile={!!profileId}
         onGoToPage={setPage}
+      />
+      <BottomNav
+        onOpenReview={() => setReviewOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        dueCount={dueCount}
+        reviewOpen={reviewOpen}
+        settingsOpen={settingsOpen}
+        onRead={() => {
+          setReviewOpen(false);
+          setSettingsOpen(false);
+        }}
       />
     </div>
   );

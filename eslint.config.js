@@ -27,6 +27,13 @@ export default tseslint.config(
     },
   },
   {
+    // Composants shadcn générés : exportent aussi leurs variantes cva
+    files: ['src/components/ui/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
     files: ['scripts/**/*.mjs'],
     extends: [js.configs.recommended, prettier],
     languageOptions: {

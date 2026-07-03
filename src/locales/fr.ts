@@ -4,6 +4,7 @@ export default {
     subtitle: 'Apprendre le saint Coran en le tapant au clavier',
   },
   nav: {
+    read: 'Lire',
     page: 'Page',
     surah: 'Sourate',
     prevPage: 'Page précédente',

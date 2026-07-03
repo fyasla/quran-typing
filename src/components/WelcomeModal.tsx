@@ -1,3 +1,8 @@
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../store/settings';
@@ -8,75 +13,92 @@ interface Props {
   onClose: () => void;
 }
 
+function ChoiceList<T extends string>({
+  name,
+  value,
+  onChange,
+  options,
+}: {
+  name: string;
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string; desc: string }[];
+}) {
+  return (
+    <RadioGroup value={value} onValueChange={(v) => onChange(v as T)} className="gap-1.5">
+      {options.map((o) => (
+        <Label
+          key={o.value}
+          className="radio-row hover:bg-muted/60 has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-accent/60 flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-3 py-2.5 text-start transition-colors"
+        >
+          <RadioGroupItem value={o.value} id={`w-${name}-${o.value}`} className="mt-0.5" />
+          <span className="grid gap-0.5 font-normal">
+            <span className="text-sm font-medium">{o.label}</span>
+            <span className="text-muted-foreground text-xs leading-relaxed">{o.desc}</span>
+          </span>
+        </Label>
+      ))}
+    </RadioGroup>
+  );
+}
+
 /** Onboarding en 3 étapes : principe, choix du clavier, niveau de difficulté */
 export default function WelcomeModal({ open, onClose }: Props) {
   const { t } = useTranslation();
   const s = useSettings();
   const [step, setStep] = useState(0);
 
-  if (!open) return null;
-
   const close = () => {
     setStep(0);
     onClose();
   };
 
-  const keyboardChoices: { value: KeyboardMode; label: string; desc: string }[] = [
-    {
-      value: 'custom',
-      label: t('settings.keyboard.custom'),
-      desc: t('settings.keyboard.customDesc'),
-    },
-    {
-      value: 'system',
-      label: t('settings.keyboard.system'),
-      desc: t('settings.keyboard.systemDesc'),
-    },
-  ];
-
-  const harakatChoices: { value: HarakatMode; label: string; desc: string }[] = [
-    { value: 'none', label: t('settings.harakat.none'), desc: t('settings.harakat.noneDesc') },
-    {
-      value: 'important',
-      label: t('settings.harakat.important'),
-      desc: t('settings.harakat.importantDesc'),
-    },
-    { value: 'all', label: t('settings.harakat.all'), desc: t('settings.harakat.allDesc') },
-  ];
-
   return (
-    <div className="modal-backdrop">
-      <div className="modal welcome-modal" onClick={(e) => e.stopPropagation()}>
+    <Dialog open={open} onOpenChange={(o) => !o && close()}>
+      <DialogContent className="welcome-modal max-h-[88dvh] gap-4 overflow-y-auto sm:max-w-md">
         {step === 0 && (
-          <>
-            <div className="welcome-icon">قٓ</div>
-            <h2>{t('welcome.title')}</h2>
-            <p>{t('welcome.intro1')}</p>
-            <p>{t('welcome.intro2')}</p>
-          </>
+          <div className="text-center">
+            <div className="welcome-icon brand-glyph text-primary mt-2 text-6xl leading-tight">
+              قٓ
+            </div>
+            <DialogTitle className="text-primary mt-2 text-xl">
+              {t('welcome.title')}
+            </DialogTitle>
+            <p className="text-muted-foreground mt-3 text-start text-sm leading-relaxed">
+              {t('welcome.intro1')}
+            </p>
+            <p className="text-muted-foreground mt-2 text-start text-sm leading-relaxed">
+              {t('welcome.intro2')}
+            </p>
+          </div>
         )}
 
         {step === 1 && (
           <>
-            <h2>{t('welcome.kbTitle')}</h2>
-            <p>{t('welcome.kbIntro')}</p>
-            {keyboardChoices.map((o) => (
-              <label key={o.value} className="radio-row">
-                <input
-                  type="radio"
-                  name="welcome-kb"
-                  checked={s.keyboardMode === o.value}
-                  onChange={() => s.setKeyboardMode(o.value)}
-                />
-                <span>
-                  <strong>{o.label}</strong>
-                  <small>{o.desc}</small>
-                </span>
-              </label>
-            ))}
-            <details className="welcome-help">
-              <summary>{t('welcome.kbHelpTitle')}</summary>
-              <ul>
+            <DialogTitle>{t('welcome.kbTitle')}</DialogTitle>
+            <p className="text-muted-foreground -mt-1 text-sm">{t('welcome.kbIntro')}</p>
+            <ChoiceList<KeyboardMode>
+              name="kb"
+              value={s.keyboardMode}
+              onChange={s.setKeyboardMode}
+              options={[
+                {
+                  value: 'custom',
+                  label: t('settings.keyboard.custom'),
+                  desc: t('settings.keyboard.customDesc'),
+                },
+                {
+                  value: 'system',
+                  label: t('settings.keyboard.system'),
+                  desc: t('settings.keyboard.systemDesc'),
+                },
+              ]}
+            />
+            <details className="welcome-help text-muted-foreground text-[13px]">
+              <summary className="text-primary cursor-pointer font-medium">
+                {t('welcome.kbHelpTitle')}
+              </summary>
+              <ul className="mt-2 list-disc space-y-1.5 ps-5">
                 <li>{t('welcome.kbHelpWindows')}</li>
                 <li>{t('welcome.kbHelpMac')}</li>
                 <li>{t('welcome.kbHelpMobile')}</li>
@@ -87,49 +109,63 @@ export default function WelcomeModal({ open, onClose }: Props) {
 
         {step === 2 && (
           <>
-            <h2>{t('welcome.harakatTitle')}</h2>
-            <p>{t('welcome.harakatIntro')}</p>
-            {harakatChoices.map((o) => (
-              <label key={o.value} className="radio-row">
-                <input
-                  type="radio"
-                  name="welcome-harakat"
-                  checked={s.harakatMode === o.value}
-                  onChange={() => s.setHarakatMode(o.value)}
-                />
-                <span>
-                  <strong>{o.label}</strong>
-                  <small>{o.desc}</small>
-                </span>
-              </label>
-            ))}
+            <DialogTitle>{t('welcome.harakatTitle')}</DialogTitle>
+            <p className="text-muted-foreground -mt-1 text-sm">{t('welcome.harakatIntro')}</p>
+            <ChoiceList<HarakatMode>
+              name="harakat"
+              value={s.harakatMode}
+              onChange={s.setHarakatMode}
+              options={[
+                {
+                  value: 'none',
+                  label: t('settings.harakat.none'),
+                  desc: t('settings.harakat.noneDesc'),
+                },
+                {
+                  value: 'important',
+                  label: t('settings.harakat.important'),
+                  desc: t('settings.harakat.importantDesc'),
+                },
+                {
+                  value: 'all',
+                  label: t('settings.harakat.all'),
+                  desc: t('settings.harakat.allDesc'),
+                },
+              ]}
+            />
           </>
         )}
 
-        <div className="welcome-nav">
+        <div className="welcome-nav mt-1 flex items-center justify-between">
           {step > 0 ? (
-            <button type="button" onClick={() => setStep(step - 1)}>
+            <Button variant="secondary" onClick={() => setStep(step - 1)}>
               {t('welcome.back')}
-            </button>
+            </Button>
           ) : (
             <span />
           )}
-          <span className="welcome-dots">
+          <span className="welcome-dots flex gap-1.5">
             {[0, 1, 2].map((i) => (
-              <i key={i} className={i === step ? 'on' : ''} />
+              <i
+                key={i}
+                className={cn(
+                  'size-2 rounded-full transition-colors',
+                  i === step ? 'on bg-primary' : 'bg-border'
+                )}
+              />
             ))}
           </span>
           {step < 2 ? (
-            <button type="button" className="primary" onClick={() => setStep(step + 1)}>
+            <Button className="primary" onClick={() => setStep(step + 1)}>
               {t('welcome.next')}
-            </button>
+            </Button>
           ) : (
-            <button type="button" className="primary" onClick={close}>
+            <Button className="primary" onClick={close}>
               {t('welcome.start')}
-            </button>
+            </Button>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

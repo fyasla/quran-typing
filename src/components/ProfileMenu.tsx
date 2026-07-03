@@ -1,7 +1,30 @@
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Check,
+  CircleUserRound,
+  Cloud,
+  CloudAlert,
+  CloudOff,
+  Download,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cloudEnabled } from '../lib/supabase';
-import { useAuth } from '../store/auth';
+import { useAuth, type SyncState } from '../store/auth';
 import { exportProgress, importProgress } from '../store/progress';
 import { useActiveProfile, useProfiles } from '../store/profiles';
 import { cloudProfileId } from '../store/sync';
@@ -12,12 +35,19 @@ interface Props {
   onDataImported: () => void;
 }
 
+const SYNC_ICONS: Record<SyncState, typeof Cloud> = {
+  synced: Cloud,
+  pending: RefreshCw,
+  offline: CloudOff,
+  error: CloudAlert,
+};
+
 export default function ProfileMenu({ onDataImported }: Props) {
   const { t } = useTranslation();
   const { profiles, createProfile, switchProfile, deleteProfile } = useProfiles();
   const active = useActiveProfile();
   const { user, syncState, signOut } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
@@ -29,13 +59,15 @@ export default function ProfileMenu({ onDataImported }: Props) {
     ? ((user.user_metadata?.name as string | undefined) ?? user.email ?? '')
     : (active?.name ?? t('profile.guest'));
 
+  const SyncIcon = SYNC_ICONS[syncState];
+
   const submitCreate = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     createProfile(trimmed);
     setName('');
     setCreating(false);
-    setOpen(false);
+    setMenuOpen(false);
   };
 
   const handleExport = () => {
@@ -55,150 +87,149 @@ export default function ProfileMenu({ onDataImported }: Props) {
     e.target.value = '';
     if (!file || !effectiveId) return;
     const ok = importProgress(effectiveId, await file.text());
-    if (ok) {
-      onDataImported();
-      setOpen(false);
-    } else {
-      window.alert(t('profile.importError'));
-    }
+    if (ok) onDataImported();
+    else window.alert(t('profile.importError'));
   };
 
   const handleDelete = () => {
     if (!active) return;
     if (window.confirm(t('profile.deleteConfirm', { name: active.name }))) {
       deleteProfile(active.id);
-      setOpen(false);
     }
   };
 
   return (
-    <div className="profile-menu">
-      <button
-        type="button"
-        className="profile-btn"
-        onClick={() => setOpen(!open)}
-        title={t('profile.label')}
+    <>
+      <DropdownMenu
+        open={menuOpen}
+        onOpenChange={(o) => {
+          setMenuOpen(o);
+          if (!o) setCreating(false);
+        }}
       >
-        ◉ {displayName}
-      </button>
-
-      {open && (
-        <>
-          <div className="popover-backdrop" onClick={() => setOpen(false)} />
-          <div className="popover">
-            {/* ===== Compte cloud ===== */}
-            {cloudEnabled && (
-              <div className="popover-section">
-                {user ? (
-                  <>
-                    <div className="account-status">
-                      <strong>{user.email}</strong>
-                      <small className={`sync-${syncState}`}>
-                        {t(`account.sync.${syncState}`)}
-                      </small>
-                    </div>
-                    <button
-                      type="button"
-                      className="popover-item"
-                      onClick={() => {
-                        signOut();
-                        setOpen(false);
-                      }}
-                    >
-                      ⎋ {t('account.signOut')}
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    className="popover-item accent"
-                    onClick={() => {
-                      setAccountOpen(true);
-                      setOpen(false);
-                    }}
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="profile-btn text-foreground/80 max-w-40 sm:max-w-52"
+            title={t('profile.label')}
+          >
+            <CircleUserRound />
+            <span className="truncate">{displayName}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-60">
+          {/* ===== Compte cloud ===== */}
+          {cloudEnabled &&
+            (user ? (
+              <>
+                <DropdownMenuLabel className="account-status">
+                  <span className="block truncate text-[13px]">{user.email}</span>
+                  <span
+                    className={`sync-${syncState} mt-0.5 flex items-center gap-1.5 text-xs font-normal ${
+                      syncState === 'error'
+                        ? 'text-destructive'
+                        : syncState === 'synced'
+                          ? 'text-primary'
+                          : 'text-muted-foreground'
+                    }`}
                   >
-                    ☁ {t('account.signInOrCreate')}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* ===== Profils locaux (mode invité) ===== */}
-            {!user && profiles.length > 0 && (
-              <div className="popover-section">
-                {profiles.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={`popover-item${p.id === active?.id ? ' active' : ''}`}
-                    onClick={() => {
-                      switchProfile(p.id);
-                      setOpen(false);
-                    }}
-                  >
-                    {p.id === active?.id ? '✓ ' : ''}
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {!user && (
-              <div className="popover-section">
-                {creating ? (
-                  <form
-                    className="profile-create"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      submitCreate();
-                    }}
-                  >
-                    <input
-                      autoFocus
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={t('profile.namePlaceholder')}
-                      maxLength={24}
+                    <SyncIcon
+                      className={`size-3.5 ${syncState === 'pending' ? 'animate-spin' : ''}`}
                     />
-                    <button type="submit" disabled={!name.trim()}>
-                      ✓
-                    </button>
-                  </form>
-                ) : (
-                  <button
-                    type="button"
-                    className="popover-item"
-                    onClick={() => setCreating(true)}
-                  >
-                    ＋ {t('profile.create')}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* ===== Export / import / suppression ===== */}
-            {effectiveId && (
-              <div className="popover-section">
-                <button type="button" className="popover-item" onClick={handleExport}>
-                  ⇩ {t('profile.export')}
-                </button>
-                <button
-                  type="button"
-                  className="popover-item"
-                  onClick={() => fileRef.current?.click()}
+                    {t(`account.sync.${syncState}`)}
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => signOut()}>
+                  <LogOut />
+                  {t('account.signOut')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem
+                  className="popover-item accent text-primary focus:text-primary font-medium"
+                  onClick={() => setAccountOpen(true)}
                 >
-                  ⇧ {t('profile.import')}
-                </button>
-                {!user && active && (
-                  <button type="button" className="popover-item danger" onClick={handleDelete}>
-                    ✕ {t('profile.delete')}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </>
-      )}
+                  <Cloud className="text-primary" />
+                  {t('account.signInOrCreate')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            ))}
+
+          {/* ===== Profils locaux (mode invité) ===== */}
+          {!user && (
+            <DropdownMenuGroup>
+              {profiles.map((p) => (
+                <DropdownMenuItem
+                  key={p.id}
+                  className={`popover-item${p.id === active?.id ? ' active' : ''}`}
+                  onClick={() => switchProfile(p.id)}
+                >
+                  <Check className={p.id === active?.id ? 'opacity-100' : 'opacity-0'} />
+                  <span className="truncate">{p.name}</span>
+                </DropdownMenuItem>
+              ))}
+              {creating ? (
+                <form
+                  className="profile-create flex items-center gap-1.5 px-2 py-1.5"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    submitCreate();
+                  }}
+                >
+                  <input
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    placeholder={t('profile.namePlaceholder')}
+                    maxLength={24}
+                    className="border-input bg-card h-8 min-w-0 flex-1 rounded-md border px-2 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  />
+                  <Button type="submit" size="icon-sm" disabled={!name.trim()}>
+                    <Check />
+                  </Button>
+                </form>
+              ) : (
+                <DropdownMenuItem
+                  className="popover-item"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setCreating(true);
+                  }}
+                >
+                  <Plus />
+                  {t('profile.create')}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+            </DropdownMenuGroup>
+          )}
+
+          {/* ===== Export / import / suppression ===== */}
+          {effectiveId && (
+            <DropdownMenuGroup>
+              <DropdownMenuItem className="popover-item" onClick={handleExport}>
+                <Download />
+                {t('profile.export')}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="popover-item" onClick={() => fileRef.current?.click()}>
+                <Upload />
+                {t('profile.import')}
+              </DropdownMenuItem>
+              {!user && active && (
+                <DropdownMenuItem className="popover-item danger" variant="destructive" onClick={handleDelete}>
+                  <Trash2 />
+                  {t('profile.delete')}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <input
         ref={fileRef}
@@ -209,6 +240,6 @@ export default function ProfileMenu({ onDataImported }: Props) {
       />
 
       <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
-    </div>
+    </>
   );
 }

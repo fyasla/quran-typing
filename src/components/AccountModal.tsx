@@ -1,3 +1,12 @@
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../store/auth';
@@ -30,8 +39,6 @@ export default function AccountModal({ open, onClose }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-
-  if (!open) return null;
 
   const switchTab = (next: Tab) => {
     setTab(next);
@@ -66,20 +73,26 @@ export default function AccountModal({ open, onClose }: Props) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal account-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{t(tab === 'signup' ? 'account.createTitle' : tab === 'forgot' ? 'account.forgotTitle' : 'account.signInTitle')}</h2>
-          <button type="button" onClick={onClose} aria-label={t('settings.close')}>
-            ✕
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="account-modal gap-4 sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            {t(
+              tab === 'signup'
+                ? 'account.createTitle'
+                : tab === 'forgot'
+                  ? 'account.forgotTitle'
+                  : 'account.signInTitle'
+            )}
+          </DialogTitle>
+        </DialogHeader>
 
         {tab !== 'forgot' && (
           <>
-            <button
+            <Button
               type="button"
-              className="google-btn"
+              variant="outline"
+              className="google-btn w-full"
               disabled={busy}
               onClick={() => run(() => auth.signInWithGoogle())}
             >
@@ -90,30 +103,33 @@ export default function AccountModal({ open, onClose }: Props) {
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
               </svg>
               {t('account.continueWithGoogle')}
-            </button>
-            <div className="account-divider">
-              <span>{t('account.or')}</span>
+            </Button>
+            <div className="account-divider text-muted-foreground flex items-center gap-3 text-xs before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+              {t('account.or')}
             </div>
           </>
         )}
 
-        <form onSubmit={submit} className="account-form">
-          <label>
-            <span>{t('account.email')}</span>
-            <input
+        <form onSubmit={submit} className="account-form flex flex-col gap-3.5">
+          <div className="grid gap-1.5">
+            <Label htmlFor="account-email">{t('account.email')}</Label>
+            <Input
+              id="account-email"
               type="email"
               required
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vous@exemple.com"
+              dir="ltr"
             />
-          </label>
+          </div>
 
           {tab !== 'forgot' && (
-            <label>
-              <span>{t('account.password')}</span>
-              <input
+            <div className="grid gap-1.5">
+              <Label htmlFor="account-password">{t('account.password')}</Label>
+              <Input
+                id="account-password"
                 type="password"
                 required
                 minLength={6}
@@ -121,51 +137,82 @@ export default function AccountModal({ open, onClose }: Props) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                dir="ltr"
               />
-            </label>
+            </div>
           )}
 
           {error && (
-            <p className="account-error" role="alert">
+            <p className="account-error text-destructive text-[13px]" role="alert">
               {error}
               {error === t('account.errNotConfirmed') && (
-                <button
+                <Button
                   type="button"
-                  className="link-btn"
+                  variant="link"
+                  size="sm"
+                  className="link-btn h-auto px-1"
                   onClick={() => run(() => auth.resendConfirmation(email), t('account.checkInbox'))}
                 >
                   {t('account.resend')}
-                </button>
+                </Button>
               )}
             </p>
           )}
-          {info && <p className="account-info">{info}</p>}
+          {info && (
+            <p className="account-info bg-accent text-accent-foreground rounded-lg px-3 py-2.5 text-[13px] leading-relaxed">
+              {info}
+            </p>
+          )}
 
-          <button type="submit" className="account-submit" disabled={busy}>
+          <Button type="submit" className="account-submit w-full" disabled={busy}>
             {busy
               ? '…'
-              : t(tab === 'signup' ? 'account.createBtn' : tab === 'forgot' ? 'account.resetBtn' : 'account.signInBtn')}
-          </button>
+              : t(
+                  tab === 'signup'
+                    ? 'account.createBtn'
+                    : tab === 'forgot'
+                      ? 'account.resetBtn'
+                      : 'account.signInBtn'
+                )}
+          </Button>
         </form>
 
-        <div className="account-links">
+        <div className="account-links -mt-1 flex flex-wrap justify-between gap-1">
           {tab === 'signin' && (
             <>
-              <button type="button" className="link-btn" onClick={() => switchTab('signup')}>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="link-btn h-auto px-0"
+                onClick={() => switchTab('signup')}
+              >
                 {t('account.noAccount')}
-              </button>
-              <button type="button" className="link-btn" onClick={() => switchTab('forgot')}>
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="link-btn text-muted-foreground h-auto px-0"
+                onClick={() => switchTab('forgot')}
+              >
                 {t('account.forgotLink')}
-              </button>
+              </Button>
             </>
           )}
           {tab !== 'signin' && (
-            <button type="button" className="link-btn" onClick={() => switchTab('signin')}>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="link-btn h-auto px-0"
+              onClick={() => switchTab('signin')}
+            >
               {t('account.haveAccount')}
-            </button>
+            </Button>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
