@@ -16,7 +16,7 @@ function errorKey(message: string): string {
   if (m.includes('already registered')) return 'account.errAlreadyRegistered';
   if (m.includes('at least 6 characters')) return 'account.errWeakPassword';
   if (m.includes('email not confirmed')) return 'account.errNotConfirmed';
-  if (m.includes('invalid email') || m.includes('validate email')) return 'account.errInvalidEmail';
+  if (m.includes('email') && m.includes('invalid')) return 'account.errInvalidEmail';
   if (m.includes('rate limit') || m.includes('too many')) return 'account.errRateLimit';
   return 'account.errGeneric';
 }
