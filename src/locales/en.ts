@@ -18,7 +18,8 @@ export default {
     harakat: {
       label: 'Harakat',
       none: 'No harakat',
-      noneDesc: 'Only letters are typed; vowel marks are filled in automatically.',
+      noneDesc:
+        'Only letters are typed; vowel marks are filled in automatically. Small letters (dagger alif…) can be typed with the regular letter, or left automatic.',
       important: 'Important harakat',
       importantDesc:
         'Vowels, tanwin, shadda and sukun are required; minor marks (maddah, silent-letter circles…) are automatic.',

@@ -142,6 +142,16 @@ export function isMarkChar(ch: string): boolean {
   return isCombining(kind) || kind === 'waqf';
 }
 
+/**
+ * Petites lettres en mode 'none' : optionnelles — ce sont phonétiquement des
+ * voyelles longues (ex. le alif de ٱلرَّحۡمَٰنِ), donc un utilisateur qui tape
+ * « aux lettres » peut naturellement les taper. Acceptées si tapées
+ * (lettre normale en mode souple), complétées automatiquement sinon.
+ */
+export function isOptional(kind: CharKind, harakatMode: HarakatMode): boolean {
+  return kind === 'small' && harakatMode === 'none';
+}
+
 /** Un token de ce type doit-il être tapé, selon les réglages ? */
 export function isRequired(kind: CharKind, harakatMode: HarakatMode): boolean {
   switch (kind) {

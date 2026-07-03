@@ -18,7 +18,8 @@ export default {
     harakat: {
       label: 'Harakats',
       none: 'Sans harakats',
-      noneDesc: 'Seules les lettres sont tapées, les harakats sont complétées automatiquement.',
+      noneDesc:
+        'Seules les lettres sont tapées, les harakats sont complétées automatiquement. Les petites lettres (alif suscrit…) peuvent être tapées avec la lettre normale, ou laissées en automatique.',
       important: 'Harakats importantes',
       importantDesc:
         'Voyelles, tanwins, shadda et sukun requis ; les marques mineures (maddah, zéro rond des lettres muettes…) sont automatiques.',

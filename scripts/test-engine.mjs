@@ -101,6 +101,54 @@ function typeString(engine, str) {
   check('cluster : ordre fatha/shadda inversé accepté', l2 === 'ok' && f === 'ok' && sh === 'ok', `${l2},${f},${sh}`);
 }
 
+// ---- Petites lettres optionnelles en mode none (souple) ----
+{
+  // Avec le alif normal tapé pour le alif suscrit de ٱلرَّحۡمَٰنِ
+  const tokens = buildTokens(page1);
+  const e = new TypingEngine(tokens, { harakatMode: 'none', smallLetters: 'flexible' });
+  const res = typeString(e, 'بسم الله الرحمان الرحيم');
+  check(
+    'mode none : alif normal accepté pour le alif suscrit (الرحمان)',
+    !res.includes('error'),
+    `première erreur à l'index ${res.indexOf('error')}`
+  );
+  // Le token du alif suscrit doit être marqué correct (tapé), pas auto
+  const smallIdx = tokens.findIndex((t) => t.ch === 'ٰ');
+  check('mode none : alif suscrit compté comme tapé', e.snapshot().status[smallIdx] === 1);
+}
+
+{
+  // Sans le alif : complété automatiquement à la lettre suivante (comportement historique)
+  const tokens = buildTokens(page1);
+  const e = new TypingEngine(tokens, { harakatMode: 'none', smallLetters: 'flexible' });
+  const res = typeString(e, 'بسم الله الرحمن الرحيم');
+  check('mode none : petite lettre non tapée toujours acceptée', !res.includes('error'));
+  const smallIdx = tokens.findIndex((t) => t.ch === 'ٰ');
+  check('mode none : alif suscrit auto-complété', e.snapshot().status[smallIdx] === 2);
+}
+
+{
+  // Petite lettre en fin de mot (ex. عَلَىٰ) : l'espace la complète
+  const page = {
+    page: 0,
+    lines: [
+      {
+        n: 1,
+        type: 'ayah',
+        words: [
+          { t: 'عَلَىٰ', k: '0:0', s: 0, e: 0 },
+          { t: 'هُدٗى', k: '0:0', s: 0, e: 0 },
+        ],
+      },
+    ],
+  };
+  const tokens = buildTokens(page);
+  const e = new TypingEngine(tokens, { harakatMode: 'none', smallLetters: 'flexible' });
+  const res = typeString(e, 'على هدى');
+  check('mode none : espace complète la petite lettre finale (عَلَىٰ)', !res.includes('error'));
+  check('mode none : page synthétique terminée', e.snapshot().done);
+}
+
 // ---- Sérialisation / reprise mi-page ----
 {
   const tokens = buildTokens(page1);

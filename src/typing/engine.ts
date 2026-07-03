@@ -8,6 +8,7 @@ import {
   classifyChar,
   isCombining,
   isMarkChar,
+  isOptional,
   isRequired,
   type CharKind,
 } from './charsets.ts';
@@ -179,6 +180,9 @@ export class TypingEngine {
         this.pos++;
         continue;
       }
+      // Optionnel (petite lettre en mode none) : reste en attente — sera
+      // tapé, ou complété quand le token requis suivant sera validé
+      if (isOptional(t.kind, this.settings.harakatMode)) break;
       if (!isRequired(t.kind, this.settings.harakatMode)) {
         this.status[this.pos] = ST_AUTO;
         this.pos++;
@@ -186,6 +190,23 @@ export class TypingEngine {
       }
       break;
     }
+    this.finalizeTrailing();
+  }
+
+  /** S'il ne reste aucun token requis, complète les optionnels restants (fin de page) */
+  private finalizeTrailing() {
+    for (let i = this.pos; i < this.tokens.length; i++) {
+      if (
+        this.status[i] === ST_PENDING &&
+        isRequired(this.tokens[i].kind, this.settings.harakatMode)
+      ) {
+        return;
+      }
+    }
+    for (let i = this.pos; i < this.tokens.length; i++) {
+      if (this.status[i] === ST_PENDING) this.status[i] = ST_AUTO;
+    }
+    this.pos = this.tokens.length;
   }
 
   /**
@@ -208,6 +229,35 @@ export class TypingEngine {
       if (harakatMode === 'none' && isMarkChar(typed)) return 'ignored';
       this.fail(typed);
       return 'error';
+    }
+
+    // Petite lettre optionnelle (mode none) : priorité au prochain token
+    // REQUIS — s'il est validé par la frappe, les optionnels sautés se
+    // complètent ; sinon la petite lettre reste candidate (lettre normale
+    // en mode souple). La priorité au requis résout l'ambiguïté du ya
+    // suscrit suivi d'un vrai ya (ex. ٱلۡأُمِّيِّـۧنَ page 364).
+    if (isOptional(cur.kind, harakatMode)) {
+      let i = this.pos;
+      while (
+        i < this.tokens.length &&
+        (this.status[i] !== ST_PENDING || !isRequired(this.tokens[i].kind, harakatMode))
+      ) {
+        i++;
+      }
+      if (i < this.tokens.length) {
+        const target = this.tokens[i];
+        const matches =
+          target.kind === 'space'
+            ? typed === ' ' || typed === '\n' || typed === '\u00A0'
+            : charMatches(typed, target.ch, smallLetters);
+        if (matches) {
+          for (let j = this.pos; j < i; j++) {
+            if (this.status[j] === ST_PENDING) this.status[j] = ST_AUTO;
+          }
+          this.accept(i);
+          return 'ok';
+        }
+      }
     }
 
     // Candidats : le token courant + (si marques combinantes) les marques
