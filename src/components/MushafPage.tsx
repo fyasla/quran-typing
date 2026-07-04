@@ -165,13 +165,16 @@ export default function MushafPage({
         r.setStart(textNode, runStart);
         r.setEnd(textNode, end);
         (runState === 1 ? okRanges : errRanges).push(r);
-        // Mot en cours : mesure géométrique du run pour le remplissage superposé
+        // Mot en cours : mesure géométrique du run pour le remplissage superposé.
+        // Les mesures sont visuelles : si la ligne est compressée (scaleX),
+        // les offsets CSS internes doivent être divisés par l'échelle.
         if (isActiveWord) {
           const rect = r.getBoundingClientRect();
+          const lineScale = parseFloat(el.closest<HTMLElement>('.line')?.dataset.scale ?? '1');
           if (!activeFill) activeFill = { key: el.dataset.w as string, runs: [] };
           activeFill.runs.push({
-            left: rect.left - wordLeft,
-            width: rect.width,
+            left: (rect.left - wordLeft) / lineScale,
+            width: rect.width / lineScale,
             err: runState === 2,
           });
         }
@@ -222,6 +225,39 @@ export default function MushafPage({
       setFill(activeFill);
     }
   }, [snapshot, tokenMap, tokens, caretIdx, blindMode, errorFlash]);
+
+  // ===== Ajustement : chaque ligne trop large est compressée pour tenir
+  // exactement dans la page (le vrai mushaf ajuste chaque ligne) =====
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!root) return;
+    const fit = () => {
+      const cs = getComputedStyle(root);
+      const avail =
+        root.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      root.querySelectorAll<HTMLElement>('.line').forEach((el) => {
+        // Largeur naturelle SANS compression des espaces (flex-shrink)
+        el.style.transform = '';
+        el.style.width = 'max-content';
+        delete el.dataset.scale;
+        const natural = el.getBoundingClientRect().width;
+        if (natural > avail + 1) {
+          const scale = avail / natural;
+          el.dataset.scale = String(scale);
+          el.style.width = `${natural}px`;
+          el.style.transform = `scaleX(${scale})`;
+          el.style.transformOrigin = 'right center';
+        } else {
+          el.style.width = '';
+        }
+      });
+    };
+    fit();
+    document.fonts?.ready.then(fit).catch(() => {});
+    const ro = new ResizeObserver(fit);
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, [page, tokens]);
 
   // Nettoyage au démontage
   useEffect(() => {
@@ -311,28 +347,12 @@ export default function MushafPage({
     );
   };
 
-  const renderLine = (line: PageLine, lineIdx: number) => {
-    if (line.type === 'surah') {
-      const chapter = chapters.find((c) => c.id === line.surah);
-      return (
-        <div className="line surah-header" key={lineIdx}>
-          <span className="surah-frame">
-            {chapter ? `سُورَةُ ${chapter.nameArabic}` : ''}
-          </span>
-        </div>
-      );
-    }
-
-    const isBasmala = line.type === 'basmala';
-    const words = isBasmala ? BASMALA_WORDS : (line.words ?? []).map((w) => w.t);
-    const markers = isBasmala ? [] : (line.words ?? []).map((w) => w.e === 1);
-    const centered = isBasmala || line.c === 1;
-
+  /** Mots + espaces typables d'une ligne (ayah, basmala ou titre typable) */
+  const buildElements = (lineIdx: number, words: string[], markers: boolean[]) => {
     // Trouve les indices des espaces entre les mots de cette ligne
     const spaceIndices: number[] = [];
     tokens.forEach((t, i) => {
       if (t.kind === 'space') {
-        // Vérifie si cet espace est entre des mots de cette ligne
         const prevToken = i > 0 ? tokens[i - 1] : null;
         const nextToken = i < tokens.length - 1 ? tokens[i + 1] : null;
         if (prevToken?.line === lineIdx && (nextToken?.line === lineIdx || !nextToken)) {
@@ -364,10 +384,38 @@ export default function MushafPage({
       }
       elements.push(renderWord(lineIdx, wi, text, markers[wi] ?? false));
     });
+    return elements;
+  };
+
+  const renderLine = (line: PageLine, lineIdx: number) => {
+    if (line.type === 'surah') {
+      const chapter = chapters.find((c) => c.id === line.surah);
+      // Titre typable (option « écrire les titres ») : des tokens existent pour cette ligne
+      const typable = tokenMap.has(`${lineIdx}:0`);
+      const name = chapter?.nameArabic ?? '';
+      return (
+        <div className="line surah-header" key={lineIdx}>
+          <span className="surah-frame">
+            {typable ? (
+              <span className="surah-frame-words">
+                {buildElements(lineIdx, ['سُورَةُ', ...name.split(' ')], [])}
+              </span>
+            ) : (
+              chapter ? `سُورَةُ ${name}` : ''
+            )}
+          </span>
+        </div>
+      );
+    }
+
+    const isBasmala = line.type === 'basmala';
+    const words = isBasmala ? BASMALA_WORDS : (line.words ?? []).map((w) => w.t);
+    const markers = isBasmala ? [] : (line.words ?? []).map((w) => w.e === 1);
+    const centered = isBasmala || line.c === 1;
 
     return (
       <div className={`line ayah${centered ? ' centered' : ''}`} key={lineIdx}>
-        {elements}
+        {buildElements(lineIdx, words, markers)}
       </div>
     );
   };

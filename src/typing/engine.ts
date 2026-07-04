@@ -76,22 +76,34 @@ function b64ToU8(s: string): Uint8Array {
 /** Mots de la basmala, pré-découpés */
 const BASMALA_WORDS = BASMALA.split(' ');
 
+export interface BuildOptions {
+  /** Titres de sourates typables : nom arabe par numéro de sourate */
+  surahNames?: Map<number, string>;
+}
+
 /**
  * Construit la liste des tokens d'une page.
  * Les mots typables sont séparés par un token espace ;
  * les médaillons de fin de verset sont des tokens auto.
+ * Avec `surahNames`, les titres de sourates (« سُورَةُ X ») deviennent typables.
  */
-export function buildTokens(page: PageData): Token[] {
+export function buildTokens(page: PageData, opts?: BuildOptions): Token[] {
   const tokens: Token[] = [];
   let firstTypableWordDone = false;
 
   page.lines.forEach((line, lineIdx) => {
-    if (line.type === 'surah') return;
+    let headerWords: { t: string; e: 0 }[] | null = null;
+    if (line.type === 'surah') {
+      const name = line.surah !== undefined ? opts?.surahNames?.get(line.surah) : undefined;
+      if (!name) return;
+      headerWords = ['سُورَةُ', ...name.split(' ')].map((t) => ({ t, e: 0 as const }));
+    }
 
     const words =
-      line.type === 'basmala'
+      headerWords ??
+      (line.type === 'basmala'
         ? BASMALA_WORDS.map((t) => ({ t, e: 0 as const }))
-        : (line.words ?? []);
+        : (line.words ?? []));
 
     words.forEach((word, wordIdx) => {
       if (word.e) {

@@ -150,6 +150,21 @@ export default function SettingsPage({ onShowWelcome }: Props) {
         ]}
       />
 
+      {/* Écrire les titres de sourates */}
+      <section className="type-surah-section bg-card flex items-start justify-between gap-4 rounded-xl border px-4 py-4">
+        <div>
+          <h3 className="text-[13px] font-semibold">{t('settings.typeSurah.label')}</h3>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+            {t('settings.typeSurah.desc')}
+          </p>
+        </div>
+        <Switch
+          checked={s.typeSurah}
+          onCheckedChange={s.setTypeSurah}
+          aria-label={t('settings.typeSurah.label')}
+        />
+      </section>
+
       {/* Objectif d'apprentissage */}
       <section className="bg-card rounded-xl border px-4 py-4">
         <h3 className="mb-2 text-[13px] font-semibold">{t('goal.learning')}</h3>

@@ -43,6 +43,7 @@ export default function ReadPage({
     blindMode,
     setBlindMode,
     keyboardMode,
+    typeSurah,
     goal,
   } = useSettings();
   const { user } = useAuth();
@@ -87,10 +88,20 @@ export default function ReadPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId, page]);
 
+  // Titres de sourates typables (option) : noms arabes par numéro
+  const buildOpts = useMemo(
+    () =>
+      typeSurah
+        ? { surahNames: new Map(chapters.map((c) => [c.id, c.nameArabic])) }
+        : undefined,
+    [typeSurah, chapters]
+  );
+
   const { tokens, snapshot, handleText, restart, errorFlash, getState } = useTypingEngine(
     pageData,
     engineSettings,
-    initialState
+    initialState,
+    buildOpts
   );
 
   // Sauvegarde de la progression en cours (et nettoyage à la complétion)

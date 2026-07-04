@@ -49,6 +49,10 @@ export default {
     language: {
       label: 'Language',
     },
+    typeSurah: {
+      label: 'Type surah titles',
+      desc: 'Titles (“سُورَةُ …”) become typable like the text — including in blind mode.',
+    },
     keyboard: {
       label: 'Keyboard',
       system: 'System keyboard',

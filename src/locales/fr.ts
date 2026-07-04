@@ -49,6 +49,10 @@ export default {
     language: {
       label: 'Langue',
     },
+    typeSurah: {
+      label: 'Écrire les titres de sourates',
+      desc: 'Les titres (« سُورَةُ … ») deviennent typables comme le texte — y compris en mode aveugle.',
+    },
     keyboard: {
       label: 'Clavier',
       system: 'Clavier système',

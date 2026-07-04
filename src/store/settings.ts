@@ -7,6 +7,8 @@ interface SettingsState {
   harakatMode: HarakatMode;
   smallLetters: SmallLettersMode;
   blindMode: boolean;
+  /** Écrire aussi les titres de sourates */
+  typeSurah: boolean;
   keyboardMode: KeyboardMode;
   theme: Theme;
   language: Language;
@@ -18,6 +20,7 @@ interface SettingsState {
   setHarakatMode: (m: HarakatMode) => void;
   setSmallLetters: (m: SmallLettersMode) => void;
   setBlindMode: (b: boolean) => void;
+  setTypeSurah: (b: boolean) => void;
   setKeyboardMode: (m: KeyboardMode) => void;
   setTheme: (t: Theme) => void;
   setLanguage: (l: Language) => void;
@@ -34,6 +37,7 @@ export const useSettings = create<SettingsState>()(
       harakatMode: 'important',
       smallLetters: 'flexible',
       blindMode: false,
+      typeSurah: false,
       keyboardMode: 'system',
       theme: 'auto',
       language: detectLanguage(),
@@ -43,6 +47,7 @@ export const useSettings = create<SettingsState>()(
       setHarakatMode: (harakatMode) => set({ harakatMode }),
       setSmallLetters: (smallLetters) => set({ smallLetters }),
       setBlindMode: (blindMode) => set({ blindMode }),
+      setTypeSurah: (typeSurah) => set({ typeSurah }),
       setKeyboardMode: (keyboardMode) => set({ keyboardMode }),
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),

@@ -149,6 +149,29 @@ function typeString(engine, str) {
   check('mode none : page synthétique terminée', e.snapshot().done);
 }
 
+// ---- Titres de sourates typables (option surahNames) ----
+{
+  const chapters = JSON.parse(readFileSync('public/data/chapters.json', 'utf8'));
+  const surahNames = new Map(chapters.map((c) => [c.id, c.nameArabic]));
+  const tokens = buildTokens(page1, { surahNames });
+  const plain = buildTokens(page1);
+  check('titres : plus de tokens avec l’option', tokens.length > plain.length);
+  check('titres : la ligne 0 (titre) a des tokens', tokens.some((t) => t.line === 0));
+
+  const e = new TypingEngine(tokens, { harakatMode: 'none', smallLetters: 'flexible' });
+  const res = typeString(e, 'سورة الفاتحة بسم الله الرحمان الرحيم');
+  check(
+    'titres : « سورة الفاتحة » puis basmala sans erreur',
+    !res.includes('error'),
+    `première erreur à l'index ${res.indexOf('error')}`
+  );
+
+  // Sans l'option, le comportement historique est inchangé
+  const e2 = new TypingEngine(plain, { harakatMode: 'none', smallLetters: 'flexible' });
+  const res2 = typeString(e2, 'بسم الله الرحمن الرحيم');
+  check('titres : sans option, basmala directe inchangée', !res2.includes('error'));
+}
+
 // ---- Sérialisation / reprise mi-page ----
 {
   const tokens = buildTokens(page1);

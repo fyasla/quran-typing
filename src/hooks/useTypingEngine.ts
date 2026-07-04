@@ -3,6 +3,7 @@ import type { PageData } from '../types';
 import {
   buildTokens,
   TypingEngine,
+  type BuildOptions,
   type EngineSettings,
   type SerializedState,
   type Token,
@@ -24,9 +25,13 @@ export function useTypingEngine(
   page: PageData | null,
   settings: EngineSettings,
   /** État sauvegardé à restaurer à la création du moteur (reprise mi-page) */
-  initialState?: SerializedState | null
+  initialState?: SerializedState | null,
+  buildOpts?: BuildOptions
 ): UseTypingEngine {
-  const tokens = useMemo(() => (page ? buildTokens(page) : []), [page]);
+  const tokens = useMemo(
+    () => (page ? buildTokens(page, buildOpts) : []),
+    [page, buildOpts]
+  );
   const engineRef = useRef<TypingEngine | null>(null);
   const [snapshot, setSnapshot] = useState<TypingSnapshot | null>(null);
   const [errorFlash, setErrorFlash] = useState(false);
