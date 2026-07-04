@@ -33,6 +33,8 @@ export interface SessionRecord {
   durationMs: number;
   /** Versets complétés sur cette page (médaillons passés) — pour l'objectif */
   verses?: number;
+  /** Vrai si la page a été écrite en mode aveugle */
+  blind?: boolean;
 }
 
 /** Jour local au format YYYY-MM-DD */

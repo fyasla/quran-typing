@@ -9,7 +9,7 @@ import ProfilePage from './pages/ProfilePage';
 import ReadPage from './pages/ReadPage';
 import SettingsPage from './pages/SettingsPage';
 import StatsPage from './pages/StatsPage';
-import { duePages, toDay } from './review/srs';
+import { computeStreak, toDay } from './review/srs';
 import { useAuth } from './store/auth';
 import { useProgress } from './store/progress';
 import { useActiveProfile } from './store/profiles';
@@ -55,7 +55,7 @@ export default function App() {
   const { user } = useAuth();
   // Progression effective : compte connecté sinon profil local
   const profileId = user ? cloudProfileId(user.id) : (activeProfile?.id ?? null);
-  const { data: progress, recordSession, reload } = useProgress(profileId);
+  const { data: progress, recordSession, addCheckin, reload } = useProgress(profileId);
 
   // Connexion → récupère et fusionne les données cloud (+ migration du profil local)
   useEffect(() => {
@@ -77,9 +77,9 @@ export default function App() {
     return c ? c.id : null;
   }, [chapters, page]);
 
-  const dueCount = useMemo(
-    () => duePages(progress.cards, toDay(new Date())).length,
-    [progress.cards]
+  const streak = useMemo(
+    () => computeStreak(progress.sessions, toDay(new Date())),
+    [progress.sessions]
   );
 
   const onLive = useCallback((live: { pageFraction: number; verses: number }) => {
@@ -90,7 +90,7 @@ export default function App() {
 
   return (
     <div className="app flex min-h-dvh flex-col">
-      <TopBar chapters={chapters} currentSurah={currentSurah} dueCount={dueCount} />
+      <TopBar chapters={chapters} currentSurah={currentSurah} streak={streak} />
 
       <main className="main flex flex-1 flex-col pb-24 md:pb-10">
         <Switch>
@@ -98,12 +98,18 @@ export default function App() {
             <ReadPage
               chapters={chapters}
               profileId={profileId}
+              progress={progress}
               recordSession={recordSession}
               onLive={onLive}
             />
           </Route>
           <Route path="/stats">
-            <StatsPage progress={progress} hasProfile={!!profileId} live={liveGoal} />
+            <StatsPage
+              progress={progress}
+              hasProfile={!!profileId}
+              live={liveGoal}
+              addCheckin={addCheckin}
+            />
           </Route>
           <Route path="/profile">
             <ProfilePage onDataImported={reload} />
@@ -124,7 +130,7 @@ export default function App() {
           setWelcomeOpen(false);
         }}
       />
-      <BottomNav dueCount={dueCount} />
+      <BottomNav streak={streak} />
     </div>
   );
 }

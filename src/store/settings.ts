@@ -10,8 +10,10 @@ interface SettingsState {
   keyboardMode: KeyboardMode;
   theme: Theme;
   language: Language;
-  /** Objectif de rythme (null tant que non défini) */
+  /** Objectif d'apprentissage (null tant que non défini) */
   goal: Goal | null;
+  /** Objectif de révision optionnel (récitation hors app pointable) */
+  reviewGoal: Goal | null;
   page: number;
   setHarakatMode: (m: HarakatMode) => void;
   setSmallLetters: (m: SmallLettersMode) => void;
@@ -20,6 +22,7 @@ interface SettingsState {
   setTheme: (t: Theme) => void;
   setLanguage: (l: Language) => void;
   setGoal: (g: Goal) => void;
+  setReviewGoal: (g: Goal | null) => void;
   setPage: (p: number) => void;
 }
 
@@ -35,6 +38,7 @@ export const useSettings = create<SettingsState>()(
       theme: 'auto',
       language: detectLanguage(),
       goal: null,
+      reviewGoal: null,
       page: 1,
       setHarakatMode: (harakatMode) => set({ harakatMode }),
       setSmallLetters: (smallLetters) => set({ smallLetters }),
@@ -43,6 +47,7 @@ export const useSettings = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
       setGoal: (goal) => set({ goal }),
+      setReviewGoal: (reviewGoal) => set({ reviewGoal }),
       setPage: (page) =>
         set({ page: Math.min(TOTAL_PAGES, Math.max(1, Math.round(page))) }),
     }),

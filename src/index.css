@@ -28,6 +28,7 @@
   --input: #d3cab2;
   --ring: #0e7a5f;
   --gold: #c9b98a;
+  --trophy: #a97e17;
   --chart-1: #0a8a66;
   --radius: 0.625rem;
 }
@@ -53,6 +54,7 @@
   --input: #3a3a48;
   --ring: #2fae8b;
   --gold: #4d4a3f;
+  --trophy: #d9b04c;
   --chart-1: #27a37f;
 }
 
@@ -77,6 +79,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-gold: var(--gold);
+  --color-trophy: var(--trophy);
   --color-chart-1: var(--chart-1);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

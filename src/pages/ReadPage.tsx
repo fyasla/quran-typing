@@ -1,14 +1,16 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { ArrowRight, CheckCircle2, Eye, EyeOff, Trophy } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import MushafPage from '../components/MushafPage';
 import TypingArea from '../components/TypingArea';
 import { loadPage } from '../data/loader';
 import { useTypingEngine } from '../hooks/useTypingEngine';
-import type { ReviewCard } from '../review/srs';
+import { formatAmount, periodStart, progressSince } from '../review/goal';
+import { toDay } from '../review/srs';
 import { useAuth } from '../store/auth';
-import type { UseProgress } from '../store/progress';
+import type { ProgressData, UseProgress } from '../store/progress';
 import { clearResume, loadResume, saveResume } from '../store/resume';
 import { schedulePush } from '../store/sync';
 import { TOTAL_PAGES, useSettings } from '../store/settings';
@@ -18,23 +20,43 @@ interface Props {
   chapters: Chapter[];
   /** Id de progression effectif (compte cloud ou profil local, null = invité pur) */
   profileId: string | null;
+  progress: ProgressData;
   recordSession: UseProgress['recordSession'];
   /** Remonte l'avancée en direct (fraction de page, versets passés) vers App */
   onLive: (live: { pageFraction: number; verses: number }) => void;
 }
 
 /** Page de lecture/frappe : moteur, reprise mi-page, enregistrement de session */
-export default function ReadPage({ chapters, profileId, recordSession, onLive }: Props) {
+export default function ReadPage({
+  chapters,
+  profileId,
+  progress,
+  recordSession,
+  onLive,
+}: Props) {
   const { t } = useTranslation();
-  const { page, setPage, harakatMode, smallLetters, blindMode, keyboardMode } = useSettings();
+  const {
+    page,
+    setPage,
+    harakatMode,
+    smallLetters,
+    blindMode,
+    setBlindMode,
+    keyboardMode,
+    goal,
+  } = useSettings();
   const { user } = useAuth();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [loadError, setLoadError] = useState(false);
-  /** Carte planifiée après la page terminée (prochaine échéance affichée) */
-  const [scheduledCard, setScheduledCard] = useState<ReviewCard | null>(null);
+  /** Trophées débloqués par la page qui vient d'être terminée */
+  const [unlocked, setUnlocked] = useState<string[]>([]);
   const startRef = useRef<number | null>(null);
   const recordedRef = useRef(false);
+  /** Le mode aveugle doit être actif de la première frappe à la fin pour compter */
+  const blindAllRef = useRef(false);
+  /** Une page reprise (déjà entamée avant) ne compte jamais comme aveugle */
+  const hadResumeRef = useRef(false);
 
   // Chargement de la page courante
   useEffect(() => {
@@ -87,22 +109,33 @@ export default function ReadPage({ chapters, profileId, recordSession, onLive }:
   useEffect(() => {
     startRef.current = null;
     recordedRef.current = false;
-    setScheduledCard(null);
+    setUnlocked([]);
+    hadResumeRef.current = initialState !== null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  // Le chrono démarre à la première frappe
+  // Désactiver le mode aveugle en cours de page invalide la session « aveugle »
+  useEffect(() => {
+    if (!blindMode) blindAllRef.current = false;
+  }, [blindMode]);
+
+  // Le chrono démarre à la première frappe (et fige l'éligibilité « aveugle »)
   const onText = useCallback(
     (text: string) => {
-      if (startRef.current === null) startRef.current = Date.now();
+      if (startRef.current === null) {
+        startRef.current = Date.now();
+        blindAllRef.current = blindMode && !hadResumeRef.current;
+      }
       handleText(text);
     },
-    [handleText]
+    [handleText, blindMode]
   );
 
   const onRestart = useCallback(() => {
     startRef.current = null;
     recordedRef.current = false;
-    setScheduledCard(null);
+    setUnlocked([]);
+    hadResumeRef.current = false;
     clearResume(profileId);
     restart();
   }, [restart, profileId]);
@@ -117,13 +150,22 @@ export default function ReadPage({ chapters, profileId, recordSession, onLive }:
   // Versets de la page (médaillons) — pour l'objectif de rythme
   const pageVerses = useMemo(() => tokens.filter((t) => t.kind === 'marker').length, [tokens]);
 
-  // Page terminée → enregistre la session et planifie la révision
+  // Page terminée → enregistre la session (et récolte les trophées débloqués)
   useEffect(() => {
     if (!snapshot?.done || recordedRef.current || tokens.length === 0) return;
     recordedRef.current = true;
     if (!profileId) return;
     const durationMs = startRef.current ? Date.now() - startRef.current : 0;
-    setScheduledCard(recordSession(page, accuracy, snapshot.errorCount, durationMs, pageVerses));
+    setUnlocked(
+      recordSession(
+        page,
+        accuracy,
+        snapshot.errorCount,
+        durationMs,
+        pageVerses,
+        blindAllRef.current
+      )
+    );
     if (user) schedulePush(user.id);
   }, [snapshot, tokens, profileId, user, recordSession, page, accuracy, pageVerses]);
 
@@ -141,6 +183,20 @@ export default function ReadPage({ chapters, profileId, recordSession, onLive }:
     onLive({ pageFraction: snapshot.pos / tokens.length, verses });
   }, [snapshot, tokens, onLive]);
 
+  // Objectif d'apprentissage : progression de la période (affichée à la complétion)
+  const goalDone = useMemo(() => {
+    if (!goal) return null;
+    const today = toDay(new Date());
+    const done = progressSince(progress.sessions, periodStart(goal, today));
+    const value = goal.unit === 'page' ? done.pages : done.verses;
+    return {
+      text: `${goal.unit === 'page' ? formatAmount(Math.floor(value * 4) / 4) : Math.floor(value)} / ${
+        goal.unit === 'page' ? formatAmount(goal.amount) : goal.amount
+      }`,
+      reached: value >= goal.amount,
+    };
+  }, [goal, progress.sessions]);
+
   return (
     <div className="read-page flex w-full flex-col">
       <div className="bg-muted h-1">
@@ -150,7 +206,24 @@ export default function ReadPage({ chapters, profileId, recordSession, onLive }:
         />
       </div>
 
-      <div className="flex flex-1 items-start justify-center px-2 pt-4 pb-6 sm:px-3">
+      {/* Barre d'outils de frappe */}
+      <div className="mx-auto flex w-full max-w-[720px] items-center justify-end px-3 pt-2.5">
+        <label className="blind-toggle text-muted-foreground flex cursor-pointer items-center gap-2 text-[13px] font-medium select-none">
+          {blindMode ? (
+            <EyeOff className="text-primary size-4" />
+          ) : (
+            <Eye className="size-4" />
+          )}
+          {t('settings.blind.label')}
+          <Switch
+            checked={blindMode}
+            onCheckedChange={setBlindMode}
+            aria-label={t('settings.blind.label')}
+          />
+        </label>
+      </div>
+
+      <div className="flex flex-1 items-start justify-center px-2 pt-2 pb-6 sm:px-3">
         {loadError && (
           <p className="load-error text-destructive mt-16 max-w-md text-center text-sm">
             {t('typing.loadError')}
@@ -180,11 +253,32 @@ export default function ReadPage({ chapters, profileId, recordSession, onLive }:
                     {t('typing.accuracy')} : {accuracy}% — {snapshot.errorCount}{' '}
                     {t('typing.errors')}
                   </p>
-                  {scheduledCard && (
-                    <p className="next-review bg-accent text-accent-foreground mt-3 rounded-lg px-3 py-2 text-sm font-medium">
-                      {t('review.nextReview', { count: scheduledCard.intervalDays })}
+
+                  {/* Objectif du jour */}
+                  {profileId && goalDone && (
+                    <p
+                      className={`next-review mt-3 rounded-lg px-3 py-2 text-sm font-medium ${
+                        goalDone.reached
+                          ? 'bg-accent text-accent-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {t('goal.label')} : {goalDone.text} {goalDone.reached ? '✓' : ''}
                     </p>
                   )}
+
+                  {/* Trophées débloqués */}
+                  {unlocked.map((id, i) => (
+                    <p
+                      key={id}
+                      className="trophy-banner bg-gold/25 text-foreground animate-in fade-in slide-in-from-bottom-2 mt-2 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium"
+                      style={{ animationDelay: `${200 + i * 150}ms`, animationFillMode: 'both' }}
+                    >
+                      <Trophy className="text-trophy size-4 shrink-0" />
+                      {t('trophies.unlocked')} {t(`trophies.${id}.name`)}
+                    </p>
+                  ))}
+
                   {!profileId && (
                     <p className="next-review muted text-muted-foreground mt-3 text-xs">
                       {t('review.createProfileHint')}

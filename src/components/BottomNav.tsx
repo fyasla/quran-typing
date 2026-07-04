@@ -1,21 +1,21 @@
 import { cn } from '@/lib/utils';
-import { BookOpen, ChartColumn, CircleUserRound, Settings } from 'lucide-react';
+import { BookOpen, ChartColumn, CircleUserRound, Flame, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'wouter';
 
 interface Props {
-  /** Pages dues aujourd'hui (pastille sur l'onglet Stats) */
-  dueCount: number;
+  /** Jours d'affilée (flamme sur l'onglet Stats) */
+  streak: number;
 }
 
 /** Barre d'onglets mobile (masquée ≥ md) : navigation entre les pages */
-export default function BottomNav({ dueCount }: Props) {
+export default function BottomNav({ streak }: Props) {
   const { t } = useTranslation();
   const [location] = useLocation();
 
   const tabs = [
     { key: 'read', href: '/', label: t('nav.read'), icon: BookOpen, badge: 0 },
-    { key: 'stats', href: '/stats', label: t('nav.stats'), icon: ChartColumn, badge: dueCount },
+    { key: 'stats', href: '/stats', label: t('nav.stats'), icon: ChartColumn, badge: streak },
     { key: 'profile', href: '/profile', label: t('profile.label'), icon: CircleUserRound, badge: 0 },
     { key: 'settings', href: '/settings', label: t('nav.settings'), icon: Settings, badge: 0 },
   ];
@@ -40,7 +40,8 @@ export default function BottomNav({ dueCount }: Props) {
               <span className="relative">
                 <Icon className="size-5" strokeWidth={active ? 2.4 : 2} />
                 {badge > 0 && (
-                  <span className="bg-destructive absolute -top-1.5 -end-2.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white">
+                  <span className="streak-badge bg-gold/40 text-trophy absolute -top-1.5 -end-3 flex h-4 min-w-4 items-center justify-center gap-px rounded-full px-1 text-[10px] font-semibold">
+                    <Flame className="size-2.5" />
                     {badge}
                   </span>
                 )}

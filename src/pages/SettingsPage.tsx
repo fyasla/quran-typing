@@ -150,25 +150,34 @@ export default function SettingsPage({ onShowWelcome }: Props) {
         ]}
       />
 
-      {/* Objectif de rythme */}
+      {/* Objectif d'apprentissage */}
       <section className="bg-card rounded-xl border px-4 py-4">
-        <h3 className="mb-2 text-[13px] font-semibold">{t('goal.label')}</h3>
+        <h3 className="mb-2 text-[13px] font-semibold">{t('goal.learning')}</h3>
         <GoalEditor value={s.goal ?? defaultGoal(toDay(new Date()))} onChange={s.setGoal} />
       </section>
 
-      {/* Mode aveugle */}
-      <section className="bg-card flex items-start justify-between gap-4 rounded-xl border px-4 py-4">
-        <div>
-          <h3 className="text-[13px] font-semibold">{t('settings.blind.label')}</h3>
-          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
-            {t('settings.blind.desc')}
-          </p>
+      {/* Objectif de révision (optionnel — pointable hors app) */}
+      <section className="review-goal-section bg-card rounded-xl border px-4 py-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-[13px] font-semibold">{t('goal.review')}</h3>
+            <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+              {t('goal.reviewDesc')}
+            </p>
+          </div>
+          <Switch
+            checked={!!s.reviewGoal}
+            onCheckedChange={(on) =>
+              s.setReviewGoal(on ? defaultGoal(toDay(new Date())) : null)
+            }
+            aria-label={t('goal.review')}
+          />
         </div>
-        <Switch
-          checked={s.blindMode}
-          onCheckedChange={s.setBlindMode}
-          aria-label={t('settings.blind.label')}
-        />
+        {s.reviewGoal && (
+          <div className="mt-3">
+            <GoalEditor value={s.reviewGoal} onChange={s.setReviewGoal} />
+          </div>
+        )}
       </section>
 
       <Button

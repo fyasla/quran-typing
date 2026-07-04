@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChartColumn, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { ChartColumn, ChevronLeft, ChevronRight, Flame, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
 import { TOTAL_PAGES, useSettings } from '../store/settings';
@@ -17,11 +17,11 @@ import ProfileMenu from './ProfileMenu';
 interface Props {
   chapters: Chapter[];
   currentSurah: number | null;
-  /** Nombre de pages dues aujourd'hui (badge sur le lien Stats) */
-  dueCount: number;
+  /** Jours d'affilée avec au moins une page écrite (flamme) */
+  streak: number;
 }
 
-export default function TopBar({ chapters, currentSurah, dueCount }: Props) {
+export default function TopBar({ chapters, currentSurah, streak }: Props) {
   const { t } = useTranslation();
   const { page, setPage } = useSettings();
 
@@ -111,9 +111,10 @@ export default function TopBar({ chapters, currentSurah, dueCount }: Props) {
             <Link href="/stats">
               <ChartColumn />
               {t('nav.stats')}
-              {dueCount > 0 && (
-                <Badge variant="destructive" className="due-badge px-1.5 py-0 text-[11px]">
-                  {dueCount}
+              {streak > 0 && (
+                <Badge className="streak-badge bg-gold/30 text-trophy gap-0.5 border-0 px-1.5 py-0 text-[11px] font-semibold">
+                  <Flame className="size-3" />
+                  {streak}
                 </Badge>
               )}
             </Link>
