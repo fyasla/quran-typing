@@ -298,7 +298,6 @@ export default function MushafPage({
     const chars = [...text];
     return (
       <span className={isMarker ? 'word marker' : 'word'} key={wordIdx}>
-        {isMarker ? '\u06DD' : null}
         {chars.map((ch, ci) => (
           // Le médaillon (marker) est un token unique pour tous ses chiffres
           <span key={ci} className={charClass(isMarker ? indices?.[0] : indices?.[ci])}>
@@ -319,7 +318,7 @@ export default function MushafPage({
       const done = ti !== undefined && snapshot.status[ti] === ST_AUTO && ti < snapshot.pos;
       return (
         <span className={`word marker${done ? ' done' : ''}`} key={wordIdx}>
-          {'\u06DD' + text}
+          {text}
         </span>
       );
     }
