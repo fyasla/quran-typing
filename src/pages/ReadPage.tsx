@@ -1,10 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { ArrowRight, CheckCircle2, Eye, EyeOff, Trophy } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Keyboard,
+  KeyboardOff,
+  Trophy,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import MushafPage from '../components/MushafPage';
 import TypingArea from '../components/TypingArea';
+import VirtualKeyboard from '../components/VirtualKeyboard';
 import { loadPage } from '../data/loader';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import { formatAmount, periodStart, progressSince } from '../review/goal';
@@ -44,6 +53,8 @@ export default function ReadPage({
     setBlindMode,
     keyboardMode,
     typeSurah,
+    virtualKeyboard,
+    setVirtualKeyboard,
     goal,
   } = useSettings();
   const { user } = useAuth();
@@ -52,6 +63,8 @@ export default function ReadPage({
   const [loadError, setLoadError] = useState(false);
   /** Trophées débloqués par la page qui vient d'être terminée */
   const [unlocked, setUnlocked] = useState<string[]>([]);
+  /** Hauteur mesurée du clavier virtuel (pour ne pas masquer le bas de page) */
+  const [kbHeight, setKbHeight] = useState(0);
   const startRef = useRef<number | null>(null);
   const recordedRef = useRef(false);
   /** Le mode aveugle doit être actif de la première frappe à la fin pour compter */
@@ -208,8 +221,19 @@ export default function ReadPage({
     };
   }, [goal, progress.sessions]);
 
+  // Mesure la hauteur du clavier virtuel pour ne pas masquer le bas de page
+  const kbRef = useCallback((el: HTMLDivElement | null) => {
+    if (!el) {
+      setKbHeight(0);
+      return;
+    }
+    const ro = new ResizeObserver(([entry]) => setKbHeight(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="read-page flex w-full flex-col">
+    <div className="read-page flex w-full flex-col" style={{ paddingBottom: kbHeight }}>
       <div className="bg-muted h-1">
         <div
           className="bg-primary h-full transition-[width] duration-150"
@@ -218,7 +242,22 @@ export default function ReadPage({
       </div>
 
       {/* Barre d'outils de frappe */}
-      <div className="mx-auto flex w-full max-w-[720px] items-center justify-end px-3 pt-2.5">
+      <div className="mx-auto flex w-full max-w-[720px] items-center justify-end gap-3 px-3 pt-2.5">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="vk-toggle text-muted-foreground"
+          aria-pressed={virtualKeyboard}
+          aria-label={t(virtualKeyboard ? 'vk.hideKeyboard' : 'vk.showKeyboard')}
+          onClick={() => setVirtualKeyboard(!virtualKeyboard)}
+        >
+          {virtualKeyboard ? (
+            <Keyboard className="text-primary" />
+          ) : (
+            <KeyboardOff />
+          )}
+        </Button>
         <label className="blind-toggle text-muted-foreground flex cursor-pointer items-center gap-2 text-[13px] font-medium select-none">
           {blindMode ? (
             <EyeOff className="text-primary size-4" />
@@ -312,6 +351,8 @@ export default function ReadPage({
           </TypingArea>
         )}
       </div>
+
+      {virtualKeyboard && <VirtualKeyboard ref={kbRef} onText={onText} onHide={() => setVirtualKeyboard(false)} />}
     </div>
   );
 }

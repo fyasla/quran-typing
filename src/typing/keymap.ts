@@ -3,7 +3,7 @@
 // disposition système : AZERTY, QWERTY…), enrichie de touches pour les
 // petites lettres et marques spéciales du script QPC Hafs.
 
-const BASE: Record<string, string> = {
+export const BASE: Record<string, string> = {
   Backquote: 'ذ',
   KeyQ: 'ض',
   KeyW: 'ص',
@@ -45,7 +45,7 @@ const BASE: Record<string, string> = {
   Backslash: '\u06E6', // ۦ petit ya
 };
 
-const SHIFT: Record<string, string> = {
+export const SHIFT: Record<string, string> = {
   Backquote: '\u0651', // ّ shadda
   KeyQ: '\u064E', // َ fatha
   KeyW: '\u064B', // ً fathatan
@@ -72,6 +72,22 @@ const SHIFT: Record<string, string> = {
   KeyZ: '\u0654', // ٔ hamza combinante au-dessus
   KeyV: '\u0655', // ٕ hamza combinante en dessous
 };
+
+/**
+ * Rangées physiques d'un clavier Arabic 101 (ordre gauche → droite, comme
+ * les capuchons des vrais claviers) — consommées par le clavier virtuel.
+ */
+export const KEY_ROWS: string[][] = [
+  [
+    'Backquote', 'KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU',
+    'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight',
+  ],
+  [
+    'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK',
+    'KeyL', 'Semicolon', 'Quote',
+  ],
+  ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash'],
+];
 
 /**
  * Convertit un événement clavier en texte arabe selon le mapping personnalisé.

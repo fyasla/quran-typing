@@ -62,6 +62,13 @@ export default {
         'The app converts physical keys to the standard Arabic layout, whatever your keyboard. Extra keys: - = \\ for small letters.',
     },
   },
+  vk: {
+    shift: 'Shift',
+    space: 'Space',
+    hide: 'Hide keyboard',
+    showKeyboard: 'Show virtual keyboard',
+    hideKeyboard: 'Hide virtual keyboard',
+  },
   welcome: {
     title: 'Welcome',
     intro1:

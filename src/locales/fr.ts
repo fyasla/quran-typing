@@ -62,6 +62,13 @@ export default {
         'L’application convertit les touches physiques selon la disposition arabe standard, quel que soit votre clavier. Touches en plus : - = \\ pour les petites lettres.',
     },
   },
+  vk: {
+    shift: 'Majuscule',
+    space: 'Espace',
+    hide: 'Masquer le clavier',
+    showKeyboard: 'Afficher le clavier virtuel',
+    hideKeyboard: 'Masquer le clavier virtuel',
+  },
   welcome: {
     title: 'Bienvenue',
     intro1:

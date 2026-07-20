@@ -18,8 +18,10 @@ import { useSettings } from './store/settings';
 import type { Chapter } from './types';
 
 export default function App() {
-  const { page, theme, language } = useSettings();
+  const { page, theme, language, virtualKeyboard } = useSettings();
   const [location] = useLocation();
+  // Sur mobile, le clavier virtuel (page Lire) prend la place de la BottomNav
+  const keyboardTakesOver = virtualKeyboard && location === '/';
 
   // Langue de l'interface (direction RTL pour l'arabe)
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function App() {
     <div className="app flex min-h-dvh flex-col">
       <TopBar chapters={chapters} currentSurah={currentSurah} streak={streak} />
 
-      <main className="main flex flex-1 flex-col pb-24 md:pb-10">
+      <main className={`main flex flex-1 flex-col md:pb-10 ${keyboardTakesOver ? '' : 'pb-24'}`}>
         <Switch>
           <Route path="/">
             <ReadPage
@@ -130,7 +132,7 @@ export default function App() {
           setWelcomeOpen(false);
         }}
       />
-      <BottomNav streak={streak} />
+      {!keyboardTakesOver && <BottomNav streak={streak} />}
     </div>
   );
 }
