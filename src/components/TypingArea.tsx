@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
 import type { KeyboardMode } from '../types';
 import { mapKeyEvent } from '../typing/keymap';
 
@@ -7,6 +8,7 @@ interface Props {
   keyboardMode: KeyboardMode;
   onText: (text: string) => void;
   children: ReactNode;
+  className?: string;
 }
 
 /**
@@ -14,7 +16,7 @@ interface Props {
  * - mode « system » : on lit les caractères produits par la disposition de l'OS (beforeinput)
  * - mode « custom » : on mappe les touches physiques (Arabic 101 émulé)
  */
-export default function TypingArea({ keyboardMode, onText, children }: Props) {
+export default function TypingArea({ keyboardMode, onText, children, className }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [focused, setFocused] = useState(false);
   const { t } = useTranslation();
@@ -51,7 +53,7 @@ export default function TypingArea({ keyboardMode, onText, children }: Props) {
   };
 
   return (
-    <div className="typing-area" onMouseDown={(e) => { e.preventDefault(); focusInput(); }}>
+    <div className={cn('typing-area', className)} onMouseDown={(e) => { e.preventDefault(); focusInput(); }}>
       <input
         ref={inputRef}
         className="hidden-input"

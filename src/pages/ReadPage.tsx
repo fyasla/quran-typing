@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import {
   ArrowRight,
+  Book,
+  BookOpen,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -23,6 +25,8 @@ import type { ProgressData, UseProgress } from '../store/progress';
 import { clearResume, loadResume, saveResume } from '../store/resume';
 import { schedulePush } from '../store/sync';
 import { TOTAL_PAGES, useSettings } from '../store/settings';
+import { buildTokens } from '../typing/engine';
+import { buildStaticSnapshot, getSpread } from '../typing/spread';
 import type { Chapter, PageData } from '../types';
 
 interface Props {
@@ -55,12 +59,15 @@ export default function ReadPage({
     typeSurah,
     virtualKeyboard,
     setVirtualKeyboard,
+    bookMode,
+    setBookMode,
     goal,
   } = useSettings();
   const { user } = useAuth();
 
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [neighborData, setNeighborData] = useState<PageData | null>(null);
   /** Trophées débloqués par la page qui vient d'être terminée */
   const [unlocked, setUnlocked] = useState<string[]>([]);
   /** Hauteur mesurée du clavier virtuel (pour ne pas masquer le bas de page) */
@@ -89,6 +96,27 @@ export default function ReadPage({
     };
   }, [page]);
 
+  // Mode livre : paire de pages du mushaf relié + chargement de la voisine statique
+  const spread = useMemo(() => getSpread(page), [page]);
+  const neighborPageNum =
+    bookMode && spread.left !== null ? (spread.right === page ? spread.left : spread.right) : null;
+
+  useEffect(() => {
+    if (!neighborPageNum) {
+      setNeighborData(null);
+      return;
+    }
+    let cancelled = false;
+    loadPage(neighborPageNum)
+      .then((data) => {
+        if (!cancelled) setNeighborData(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [neighborPageNum]);
+
   const engineSettings = useMemo(
     () => ({ harakatMode, smallLetters }),
     [harakatMode, smallLetters]
@@ -116,6 +144,20 @@ export default function ReadPage({
     initialState,
     buildOpts
   );
+
+  // Page voisine (mode livre) : statique, jamais tapée — token+snapshot dérivés,
+  // pas de moteur de frappe dédié (voir buildStaticSnapshot).
+  const neighborTokens = useMemo(
+    () => (neighborData ? buildTokens(neighborData, buildOpts) : []),
+    [neighborData, buildOpts]
+  );
+  const neighborDone = neighborPageNum !== null && !!progress.cards[neighborPageNum];
+  const neighborSnapshot = useMemo(
+    () => buildStaticSnapshot(neighborTokens.length, neighborDone),
+    [neighborTokens.length, neighborDone]
+  );
+  const showBook = bookMode && spread.left !== null && neighborData !== null;
+  const isRightActive = spread.right === page;
 
   // Sauvegarde de la progression en cours (et nettoyage à la complétion)
   useEffect(() => {
@@ -242,7 +284,20 @@ export default function ReadPage({
       </div>
 
       {/* Barre d'outils de frappe */}
-      <div className="mx-auto flex w-full max-w-[720px] items-center justify-end gap-3 px-3 pt-2.5">
+      <div
+        className={`mx-auto flex w-full items-center justify-end gap-3 px-3 pt-2.5 ${showBook ? 'max-w-[1400px]' : 'max-w-[720px]'}`}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="book-toggle text-muted-foreground hidden md:inline-flex"
+          aria-pressed={bookMode}
+          aria-label={t(bookMode ? 'book.hide' : 'book.show')}
+          onClick={() => setBookMode(!bookMode)}
+        >
+          {bookMode ? <BookOpen className="text-primary" /> : <Book />}
+        </Button>
         <Button
           type="button"
           variant="ghost"
@@ -283,15 +338,65 @@ export default function ReadPage({
           <p className="loading text-muted-foreground mt-16 text-sm">{t('typing.loading')}</p>
         )}
         {pageData && snapshot && (
-          <TypingArea keyboardMode={keyboardMode} onText={onText}>
-            <MushafPage
-              page={pageData}
-              tokens={tokens}
-              snapshot={snapshot}
-              blindMode={blindMode}
-              errorFlash={errorFlash}
-              chapters={chapters}
-            />
+          <TypingArea
+            keyboardMode={keyboardMode}
+            onText={onText}
+            className={showBook ? 'typing-area-book' : undefined}
+          >
+            {showBook ? (
+              <div className="book-spread" dir="rtl">
+                {isRightActive ? (
+                  <>
+                    <MushafPage
+                      page={pageData}
+                      tokens={tokens}
+                      snapshot={snapshot}
+                      blindMode={blindMode}
+                      errorFlash={errorFlash}
+                      chapters={chapters}
+                    />
+                    <MushafPage
+                      page={neighborData!}
+                      tokens={neighborTokens}
+                      snapshot={neighborSnapshot}
+                      blindMode={blindMode}
+                      errorFlash={false}
+                      chapters={chapters}
+                      interactive={false}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <MushafPage
+                      page={neighborData!}
+                      tokens={neighborTokens}
+                      snapshot={neighborSnapshot}
+                      blindMode={blindMode}
+                      errorFlash={false}
+                      chapters={chapters}
+                      interactive={false}
+                    />
+                    <MushafPage
+                      page={pageData}
+                      tokens={tokens}
+                      snapshot={snapshot}
+                      blindMode={blindMode}
+                      errorFlash={errorFlash}
+                      chapters={chapters}
+                    />
+                  </>
+                )}
+              </div>
+            ) : (
+              <MushafPage
+                page={pageData}
+                tokens={tokens}
+                snapshot={snapshot}
+                blindMode={blindMode}
+                errorFlash={errorFlash}
+                chapters={chapters}
+              />
+            )}
             {snapshot.done && (
               <div className="complete-overlay absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/80 backdrop-blur-[2px]">
                 <div className="complete-card bg-card animate-in fade-in zoom-in-95 mx-4 w-full max-w-sm rounded-2xl border p-7 text-center shadow-xl duration-200">

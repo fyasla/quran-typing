@@ -69,6 +69,10 @@ export default {
     showKeyboard: 'إظهار لوحة المفاتيح الافتراضية',
     hideKeyboard: 'إخفاء لوحة المفاتيح الافتراضية',
   },
+  book: {
+    show: 'عرض الكتاب (صفحتان)',
+    hide: 'عرض صفحة واحدة',
+  },
   welcome: {
     title: 'مرحبًا',
     intro1:

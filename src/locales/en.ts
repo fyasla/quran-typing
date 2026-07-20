@@ -69,6 +69,10 @@ export default {
     showKeyboard: 'Show virtual keyboard',
     hideKeyboard: 'Hide virtual keyboard',
   },
+  book: {
+    show: 'Book view (2 pages)',
+    hide: 'Single page view',
+  },
   welcome: {
     title: 'Welcome',
     intro1:

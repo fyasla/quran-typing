@@ -12,6 +12,8 @@ interface SettingsState {
   keyboardMode: KeyboardMode;
   /** Clavier arabe virtuel à l'écran (par défaut : activé sur écran tactile) */
   virtualKeyboard: boolean;
+  /** Mode livre : la page active + sa voisine reliée, côte à côte */
+  bookMode: boolean;
   theme: Theme;
   language: Language;
   /** Objectif d'apprentissage (null tant que non défini) */
@@ -25,6 +27,7 @@ interface SettingsState {
   setTypeSurah: (b: boolean) => void;
   setKeyboardMode: (m: KeyboardMode) => void;
   setVirtualKeyboard: (b: boolean) => void;
+  setBookMode: (b: boolean) => void;
   setTheme: (t: Theme) => void;
   setLanguage: (l: Language) => void;
   setGoal: (g: Goal) => void;
@@ -49,6 +52,7 @@ export const useSettings = create<SettingsState>()(
       typeSurah: false,
       keyboardMode: 'system',
       virtualKeyboard: defaultVirtualKeyboard(),
+      bookMode: false,
       theme: 'auto',
       language: detectLanguage(),
       goal: null,
@@ -60,6 +64,7 @@ export const useSettings = create<SettingsState>()(
       setTypeSurah: (typeSurah) => set({ typeSurah }),
       setKeyboardMode: (keyboardMode) => set({ keyboardMode }),
       setVirtualKeyboard: (virtualKeyboard) => set({ virtualKeyboard }),
+      setBookMode: (bookMode) => set({ bookMode }),
       setTheme: (theme) => set({ theme }),
       setLanguage: (language) => set({ language }),
       setGoal: (goal) => set({ goal }),

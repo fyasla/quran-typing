@@ -16,6 +16,9 @@ interface Props {
   blindMode: boolean;
   errorFlash: boolean;
   chapters: Chapter[];
+  /** Page voisine statique (mode livre) : pas de curseur, pas de CSS.highlights
+   * (registre global — deux instances y écrivant en même temps s'écraseraient). */
+  interactive?: boolean;
 }
 
 const BASMALA_WORDS = BASMALA.split(' ');
@@ -61,6 +64,7 @@ export default function MushafPage({
   blindMode,
   errorFlash,
   chapters,
+  interactive = true,
 }: Props) {
   const pageRef = useRef<HTMLDivElement>(null);
   const tokenMap = useMemo(() => buildTokenMap(tokens), [tokens]);
@@ -123,7 +127,9 @@ export default function MushafPage({
 
   // ===== Chemin moderne : plages colorées via CSS.highlights =====
   useEffect(() => {
-    if (!supportsHighlights) return;
+    // CSS.highlights est un registre global au document : une page voisine
+    // non interactive ne doit jamais y écrire (écraserait celles de la page active).
+    if (!supportsHighlights || !interactive) return;
     const root = pageRef.current;
     if (!root) return;
 
@@ -224,7 +230,7 @@ export default function MushafPage({
       fillSig.current = sig;
       setFill(activeFill);
     }
-  }, [snapshot, tokenMap, tokens, caretIdx, blindMode, errorFlash]);
+  }, [snapshot, tokenMap, tokens, caretIdx, blindMode, errorFlash, interactive]);
 
   // ===== Ajustement : chaque ligne trop large est compressée pour tenir
   // exactement dans la page (le vrai mushaf ajuste chaque ligne) =====
@@ -259,13 +265,14 @@ export default function MushafPage({
     return () => ro.disconnect();
   }, [page, tokens]);
 
-  // Nettoyage au démontage
+  // Nettoyage au démontage (seule l'instance interactive possède le registre global)
   useEffect(() => {
+    if (!interactive) return;
     return () => {
       if (!supportsHighlights) return;
       for (const n of HL_NAMES) CSS.highlights.delete(n);
     };
-  }, []);
+  }, [interactive]);
 
   // ===== Chemin de secours : spans par caractère (navigateurs anciens) =====
   const charClass = (tokenIdx: number | undefined, isSpace = false): string => {
@@ -309,7 +316,7 @@ export default function MushafPage({
   };
 
   const renderWord = (lineIdx: number, wordIdx: number, text: string, isMarker: boolean) => {
-    if (!supportsHighlights) return renderWordLegacy(lineIdx, wordIdx, text, isMarker);
+    if (!supportsHighlights || !interactive) return renderWordLegacy(lineIdx, wordIdx, text, isMarker);
 
     if (isMarker) {
       // Médaillon de fin de verset : token unique, jamais tapé — son état

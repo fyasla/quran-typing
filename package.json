@@ -10,7 +10,7 @@
     "fetch-data": "node scripts/fetch-quran-data.mjs",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*\" \"scripts/**/*\" \"*.{ts,js,json,html}\"",
-    "test": "node scripts/test-engine.mjs && node scripts/test-srs.mjs && node scripts/test-sync.mjs && node scripts/test-goal.mjs && node scripts/test-trophies.mjs",
+    "test": "node scripts/test-engine.mjs && node scripts/test-srs.mjs && node scripts/test-sync.mjs && node scripts/test-goal.mjs && node scripts/test-trophies.mjs && node scripts/test-spread.mjs",
     "test:corpus": "node scripts/test-corpus.mjs"
   },
   "dependencies": {

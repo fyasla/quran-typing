@@ -59,6 +59,30 @@
   cursor: text;
 }
 
+/* Mode livre : 2 pages côte à côte, conteneur élargi */
+.typing-area.typing-area-book {
+  max-width: 1400px;
+}
+
+.book-spread {
+  display: flex;
+  gap: 1.75rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.book-spread > .mushaf-page {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  /* Repli sûr si le mode livre a été activé sur un écran large puis rétréci */
+  .book-spread {
+    flex-direction: column;
+  }
+}
+
 .hidden-input {
   position: fixed;
   top: -100px;
